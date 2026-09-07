@@ -1,0 +1,46 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+figure {
+  margin: 0;
+  border: 1px solid currentColor;
+  padding: 0.5rem;
+}
+
+img,
+canvas {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  background: repeating-conic-gradient(#80808033 0 25%, transparent 0 50%) 0 0 /
+    16px 16px;
+}
+
+pre {
+  overflow: auto;
+  border: 1px solid currentColor;
+  padding: 1rem;
+  font-size: 0.8rem;
+}

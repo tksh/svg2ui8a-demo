@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>svg2ui8a demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>svg2ui8a demo</h1>
+      <p>
+        SVG source (<a href="/artwork.svg"><code>artwork.svg</code></a>)
+        rendered through
+        <a href="https://jsr.io/@tksh/svg2ui8a"><code>jsr:@tksh/svg2ui8a</code></a>:
+        <code>svg2rgba</code> →
+        <code>&lt;canvas&gt;</code>.
+      </p>
+
+      <section class="controls">
+        <label>Width <input id="width" type="number" value="310" min="1" max="4096" /></label>
+        <label>Height <input id="height" type="number" value="310" min="1" max="4096" /></label>
+        <button id="render">Render</button>
+        <span id="status" role="status">Loading…</span>
+      </section>
+
+      <section class="gallery">
+        <figure>
+          <figcaption>Native SVG (<code>&lt;img&gt;</code>)</figcaption>
+          <img id="native" src="/artwork.svg"
+            alt="Sample artwork, native SVG rendering" />
+        </figure>
+        <figure>
+          <figcaption>svg2ui8a RGBA (<code>&lt;canvas&gt;</code>)</figcaption>
+          <canvas id="output"></canvas>
+        </figure>
+      </section>
+
+      <section>
+        <h2>SVG source</h2>
+        <pre><code id="source">Loading…</code></pre>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

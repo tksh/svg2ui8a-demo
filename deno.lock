@@ -1,0 +1,17 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@tksh/svg2ui8a@*": "0.3.0",
+    "jsr:@tksh/svg2ui8a@0.3": "0.3.0"
+  },
+  "jsr": {
+    "@tksh/svg2ui8a@0.3.0": {
+      "integrity": "913cbf8cb098fc5e3c72abf7817408cd24761c0ba7583000f6bfe616ef2524a9"
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@tksh/svg2ui8a@0.3"
+    ]
+  }
+}

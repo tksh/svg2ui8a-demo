@@ -1,0 +1,16 @@
+{
+  "name": "@tksh/svg2ui8a-demo",
+  "version": "0.1.0",
+  "imports": {
+    "@tksh/svg2ui8a": "jsr:@tksh/svg2ui8a@^0.3.0",
+    "@tksh/svg2ui8a/svg2rgba": "jsr:@tksh/svg2ui8a@^0.3.0/svg2rgba",
+    "@tksh/svg2ui8a/svg2usvg": "jsr:@tksh/svg2ui8a@^0.3.0/svg2usvg"
+  },
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read main.ts",
+    "start": "deno run --allow-net --allow-read main.ts",
+    "check": "deno check main.ts",
+    "fmt": "deno fmt",
+    "lint": "deno lint"
+  }
+}
