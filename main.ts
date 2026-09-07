@@ -1,13 +1,13 @@
 // svg2ui8a-demo server (Deno-first).
 //
-// Imports the library straight from JSR.io and renders the bundled
-// `public/artwork.svg` to raw RGBA on the server. The browser draws the
-// returned pixels onto a <canvas> — no PNG encoder, no client-side Wasm.
+// Imports the library straight from JSR.io and renders SVG sources to raw
+// RGBA on the server. The browser draws the returned pixels onto a <canvas> —
+// no PNG encoder, no client-side Wasm.
 import { svg2rgba } from "@tksh/svg2ui8a/svg2rgba";
 import { svg2usvg } from "@tksh/svg2ui8a/svg2usvg";
 
 const ROOT = new URL("./public/", import.meta.url);
-const SVG_PATH = new URL("./public/artwork.svg", import.meta.url);
+const SVG_PATH = new URL("./public/ghostscript_tiger.svg", import.meta.url);
 const SVG_TEXT = await Deno.readTextFile(SVG_PATH);
 
 const CONTENT_TYPES: Record<string, string> = {

@@ -9,6 +9,8 @@ const usvgMetaEl = document.getElementById("usvg-meta");
 const usvgEl = document.getElementById("usvg");
 const dprEl = document.getElementById("dpr");
 const pixelatedEl = document.getElementById("pixelated");
+const sampleEl = document.getElementById("sample");
+const nativeEl = document.getElementById("native");
 
 function decodeBase64(b64) {
   const binary = atob(b64);
@@ -17,8 +19,13 @@ function decodeBase64(b64) {
   return bytes;
 }
 async function loadSource() {
-  const res = await fetch("/artwork.svg");
+  await loadSample();
+}
+
+async function loadSample() {
+  const res = await fetch(`/${sampleEl.value}`);
   sourceEl.value = await res.text();
+  nativeEl.src = `/${sampleEl.value}`;
 }
 
 function sizeValue(el) {
@@ -80,6 +87,10 @@ async function render() {
 
 pixelatedEl.addEventListener("change", applyPixelated);
 dprEl.addEventListener("change", render);
+sampleEl.addEventListener("change", async () => {
+  await loadSample();
+  await render();
+});
 renderBtn.addEventListener("click", render);
 applyPixelated();
 await loadSource();

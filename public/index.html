@@ -10,14 +10,19 @@
     <main>
       <h1>svg2ui8a demo</h1>
       <p>
-        SVG source (<a href="/artwork.svg"><code>artwork.svg</code></a>)
-        rendered through
+        SVG source (pick a sample or edit it below) rendered through
         <a href="https://jsr.io/@tksh/svg2ui8a"><code>jsr:@tksh/svg2ui8a</code></a>:
         <code>svg2rgba</code> →
         <code>&lt;canvas&gt;</code>.
       </p>
 
       <section class="controls">
+        <label>Sample
+          <select id="sample">
+            <option value="ghostscript_tiger.svg" selected>Ghostscript Tiger</option>
+            <option value="straightlines.svg">Straightlines</option>
+          </select>
+        </label>
         <label>Width <input id="width" type="number" value="310" min="1" max="4096" /></label>
         <label>Height <input id="height" type="number" value="310" min="1" max="4096" /></label>
         <label><input id="dpr" type="checkbox" checked /> Auto size × devicePixelRatio</label>
@@ -29,7 +34,7 @@
       <section class="gallery">
         <figure>
           <figcaption>Native SVG (<code>&lt;img&gt;</code>)</figcaption>
-          <img id="native" src="/artwork.svg"
+          <img id="native" src="/ghostscript_tiger.svg"
             alt="Sample artwork, native SVG rendering" />
         </figure>
         <figure>
