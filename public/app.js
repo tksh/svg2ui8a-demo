@@ -75,7 +75,8 @@ async function render() {
       data.height,
     );
     ctx.putImageData(image, 0, 0);
-    statusEl.textContent = `${data.width}×${data.height} · ${data.alphaMode}` +
+    statusEl.textContent =
+      `${data.width}×${data.height} · alpha: ${data.alphaMode}` +
       (dprEl.checked ? ` · dpr ${dpr}` : "");
     usvgMetaEl.textContent =
       `Uint8Array ${usvgData.byteLength} bytes → usvg string ${usvgData.usvg.length} chars`;

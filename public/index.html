@@ -8,13 +8,7 @@
   </head>
   <body>
     <main>
-      <h1>svg2ui8a demo</h1>
-      <p>
-        SVG source (pick a sample or edit it below) rendered through
-        <a href="https://jsr.io/@tksh/svg2ui8a"><code>jsr:@tksh/svg2ui8a</code></a>:
-        <code>svg2rgba</code> →
-        <code>&lt;canvas&gt;</code>.
-      </p>
+      <h1><a href="https://jsr.io/@tksh/svg2ui8a">@tksh/svg2ui8a</a> demo</h1>
 
       <section class="controls">
         <label>Sample
@@ -23,24 +17,27 @@
             <option value="straightlines.svg">Straightlines</option>
           </select>
         </label>
-        <label>Width <input id="width" type="number" value="310" min="1" max="4096" /></label>
-        <label>Height <input id="height" type="number" value="310" min="1" max="4096" /></label>
+        <label>Width <input id="width" type="number" value="512" min="1" max="4096" /></label>
+        <label>Height <input id="height" type="number" value="512" min="1" max="4096" /></label>
         <label><input id="dpr" type="checkbox" checked /> Auto size × devicePixelRatio</label>
         <label><input id="pixelated" type="checkbox" /> Pixelated (raw pixels)</label>
         <button id="render">Render</button>
-        <span id="status" role="status">Loading…</span>
       </section>
 
-      <section class="gallery">
-        <figure>
-          <figcaption>Native SVG (<code>&lt;img&gt;</code>)</figcaption>
-          <img id="native" src="/ghostscript_tiger.svg"
-            alt="Sample artwork, native SVG rendering" />
-        </figure>
-        <figure>
-          <figcaption>svg2ui8a RGBA (<code>&lt;canvas&gt;</code>)</figcaption>
-          <canvas id="output"></canvas>
-        </figure>
+      <section>
+        <h2>SVG rasterize (<code>svg2rgba</code>)</h2>
+        <p id="status" role="status">Loading…</p>
+        <div class="gallery">
+          <figure>
+            <figcaption>Native SVG (<code>&lt;img&gt;</code>)</figcaption>
+            <img id="native" src="/ghostscript_tiger.svg"
+              alt="Sample artwork, native SVG rendering" />
+          </figure>
+          <figure>
+            <figcaption>svg2ui8a RGBA (<code>&lt;canvas&gt;</code>)</figcaption>
+            <canvas id="output"></canvas>
+          </figure>
+        </div>
       </section>
 
       <section>
