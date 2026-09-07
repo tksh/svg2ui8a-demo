@@ -20,6 +20,8 @@
       <section class="controls">
         <label>Width <input id="width" type="number" value="310" min="1" max="4096" /></label>
         <label>Height <input id="height" type="number" value="310" min="1" max="4096" /></label>
+        <label><input id="dpr" type="checkbox" checked /> Auto size × devicePixelRatio</label>
+        <label><input id="pixelated" type="checkbox" /> Pixelated (raw pixels)</label>
         <button id="render">Render</button>
         <span id="status" role="status">Loading…</span>
       </section>
@@ -43,8 +45,8 @@
       </section>
 
       <section>
-        <h2>SVG source</h2>
-        <pre><code id="source">Loading…</code></pre>
+        <h2>SVG source (editable)</h2>
+        <textarea id="source" rows="18" spellcheck="false"></textarea>
       </section>
     </main>
     <script type="module" src="/app.js"></script>

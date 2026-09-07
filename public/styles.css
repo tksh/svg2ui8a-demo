@@ -33,9 +33,13 @@ img,
 canvas {
   width: 100%;
   height: auto;
-  image-rendering: pixelated;
   background: repeating-conic-gradient(#80808033 0 25%, transparent 0 50%) 0 0 /
     16px 16px;
+}
+
+/* Opt-in raw-pixel inspection: nearest-neighbor display scaling. */
+canvas.pixelated {
+  image-rendering: pixelated;
 }
 
 pre {
@@ -43,4 +47,12 @@ pre {
   border: 1px solid currentColor;
   padding: 1rem;
   font-size: 0.8rem;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: monospace;
+  font-size: 0.8rem;
+  resize: vertical;
 }
