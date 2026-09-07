@@ -4,6 +4,7 @@
 // `public/artwork.svg` to raw RGBA on the server. The browser draws the
 // returned pixels onto a <canvas> — no PNG encoder, no client-side Wasm.
 import { svg2rgba } from "@tksh/svg2ui8a/svg2rgba";
+import { svg2usvg } from "@tksh/svg2ui8a/svg2usvg";
 
 const ROOT = new URL("./public/", import.meta.url);
 const SVG_PATH = new URL("./public/artwork.svg", import.meta.url);
@@ -84,9 +85,21 @@ async function handleRender(req: Request): Promise<Response> {
   }
 }
 
+async function handleUsvg(): Promise<Response> {
+  try {
+    // SVG string -> Uint8Array (normalized usvg XML bytes) -> usvg string.
+    const bytes: Uint8Array = await svg2usvg(SVG_TEXT);
+    const usvg = new TextDecoder().decode(bytes);
+    return Response.json({ byteLength: bytes.length, usvg });
+  } catch (e) {
+    return Response.json({ error: String(e) }, { status: 500 });
+  }
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   const { pathname } = new URL(req.url);
   if (pathname === "/api/render") return await handleRender(req);
+  if (pathname === "/api/usvg") return await handleUsvg();
   if (pathname === "/api/source") {
     return new Response(SVG_TEXT, {
       headers: { "content-type": "image/svg+xml; charset=utf-8" },

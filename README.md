@@ -14,10 +14,14 @@ deno task dev
 
 ## How it works
 
-- `main.ts` — `Deno.serve` static server + `GET /api/render?width=&height=`.
-  Uses `svg2rgba` (`jsr:@tksh/svg2ui8a/svg2rgba`), returns
+- `main.ts` — `Deno.serve` static server with two JSON APIs:
+  `GET /api/render?width=&height=` uses `svg2rgba`
+  (`jsr:@tksh/svg2ui8a/svg2rgba`), returns
   `{ width, height,
-  alphaMode, pixelsBase64 }`.
+  alphaMode, pixelsBase64 }`; `GET /api/usvg` uses
+  `svg2usvg` (`jsr:@tksh/svg2ui8a/svg2usvg`), converts the SVG into a
+  `Uint8Array` and decodes it back into the normalized usvg string, returns
+  `{ byteLength, usvg }`.
 - `public/index.html` + `public/app.js` — shows the native SVG
   (`<img src="/artwork.svg">`) next to the library rendering (`<canvas>`), plus
   the SVG source.

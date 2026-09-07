@@ -5,6 +5,8 @@ const widthEl = document.getElementById("width");
 const heightEl = document.getElementById("height");
 const renderBtn = document.getElementById("render");
 const sourceEl = document.getElementById("source");
+const usvgMetaEl = document.getElementById("usvg-meta");
+const usvgEl = document.getElementById("usvg");
 
 function decodeBase64(b64) {
   const binary = atob(b64);
@@ -41,6 +43,21 @@ async function render() {
   }
 }
 
+async function loadUsvg() {
+  try {
+    const res = await fetch("/api/usvg");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+    usvgMetaEl.textContent =
+      `Uint8Array ${data.byteLength} bytes → usvg string ${data.usvg.length} chars`;
+    usvgEl.textContent = data.usvg;
+  } catch (e) {
+    usvgMetaEl.textContent = `Failed to load usvg: ${e.message}`;
+    usvgEl.textContent = "";
+  }
+}
+
 renderBtn.addEventListener("click", render);
 await loadSource();
+await loadUsvg();
 await render();
