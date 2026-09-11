@@ -29,6 +29,13 @@ deno task dev
   `jsr:@std/encoding`; URL-safe, so no percent-encoding needed, padding
   optional). Without `svg`, GET renders the bundled `ghostscript_tiger.svg`.
   POST body values take precedence over query params.
+- `og.ts` + `GET /og` — dynamic OGP cards (scrapers don't run JS, so the meta
+  tags are rendered server-side). Shape params `?shape=rect&fill=red&w=2&h=2` or
+  `?shape=circle&fill=blue&r=50` build a centered shape on a 1200×630 SVG;
+  `og:title`/`og:description` are derived from the validated params (e.g.
+  `Red filled rect` / `size: width=2 height=2`), and `og:image` points at
+  `/api/png` with the built SVG. Absent/invalid params fall back to a generic
+  card, never an error.
 - `public/index.html` + `public/app.js` — sample dropdown (Ghostscript Tiger by
   default, Straightlines) plus an editable SVG textarea; Render posts its
   contents and shows the native SVG next to the library rendering (`<canvas>`),

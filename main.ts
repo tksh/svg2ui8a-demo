@@ -4,9 +4,18 @@
 // RGBA on the server. The browser draws the returned pixels onto a <canvas> —
 // no PNG encoder, no client-side Wasm.
 import { PhotonImage } from "@denext/photon";
-import { decodeBase64Url } from "@std/encoding/base64url";
+import { decodeBase64Url, encodeBase64Url } from "@std/encoding/base64url";
 import { svg2rgba } from "@tksh/svg2ui8a/svg2rgba";
 import { svg2usvg } from "@tksh/svg2ui8a/svg2usvg";
+import {
+  buildShapeSvg,
+  escapeAttr,
+  genericMeta,
+  OGP_HEIGHT,
+  OGP_WIDTH,
+  parseShapeParams,
+  shapeMeta,
+} from "./og.ts";
 
 const ROOT = new URL("./public/", import.meta.url);
 const SVG_PATH = new URL("./public/ghostscript_tiger.svg", import.meta.url);
@@ -236,8 +245,68 @@ async function handleUsvg(req: Request): Promise<Response> {
   }
 }
 
+// Base URL for absolute og:image URLs: https on Deploy, http for localhost.
+function publicBaseUrl(req: Request): string {
+  const host = req.headers.get("host") ?? "localhost:8000";
+  const proto = host.startsWith("localhost") || host.startsWith("127.0.0.1")
+    ? "http"
+    : "https";
+  return `${proto}://${host}`;
+}
+
+// Dynamic OGP card page. Scrapers don't run JS, so the meta tags are
+// rendered into the HTML server-side. Absent/invalid params fall back to a
+// generic card (never an error).
+async function handleOg(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const spec = parseShapeParams(url.searchParams);
+  const meta = spec === null ? genericMeta() : shapeMeta(spec);
+  const base = publicBaseUrl(req);
+  const rawImageUrl = spec === null
+    ? `${base}/api/png?width=${OGP_WIDTH}&height=${OGP_HEIGHT}`
+    : `${base}/api/png?svg=${
+      encodeBase64Url(buildShapeSvg(spec))
+    }&width=${OGP_WIDTH}&height=${OGP_HEIGHT}`;
+  const title = escapeAttr(meta.title);
+  const description = escapeAttr(meta.description);
+  const imageUrl = escapeAttr(rawImageUrl);
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${description}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta property="og:image:width" content="${OGP_WIDTH}" />
+    <meta property="og:image:height" content="${OGP_HEIGHT}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <main>
+      <h1>${title}</h1>
+      <p>${description}</p>
+      <img src="${imageUrl}" width="${OGP_WIDTH}" height="${OGP_HEIGHT}" alt="${title}" />
+      <p><a href="/">Back to the svg2ui8a demo</a></p>
+    </main>
+  </body>
+</html>
+`;
+  return new Response(html, {
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "public, max-age=3600",
+    },
+  });
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   const { pathname } = new URL(req.url);
+  if (pathname === "/og" && req.method === "GET") {
+    return await handleOg(req);
+  }
   if (
     pathname === "/api/rgba" &&
     (req.method === "GET" || req.method === "POST")
