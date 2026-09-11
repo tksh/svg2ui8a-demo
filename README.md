@@ -20,8 +20,12 @@ deno task dev
   uses `svg2usvg` (`jsr:@tksh/svg2ui8a/svg2usvg`), converts the SVG into a
   `Uint8Array` and decodes it back into the normalized usvg string, returns
   `{ byteLength, usvg }`. POST takes a JSON body `{ svg?, width?, height? }`
-  (the page sends the edited textarea contents); GET uses query params and the
-  bundled `ghostscript_tiger.svg`.
+  (the page sends the edited textarea contents); GET takes query params
+  `?svg=&width=&height=`, where `svg` is a base64url-encoded SVG string (decoded
+  with `decodeBase64Url` from `jsr:@std/encoding`; URL-safe, so no
+  percent-encoding needed, padding optional). Without `svg`, GET renders the
+  bundled `ghostscript_tiger.svg`. POST body values take precedence over query
+  params.
 - `public/index.html` + `public/app.js` — sample dropdown (Ghostscript Tiger by
   default, Straightlines) plus an editable SVG textarea; Render posts its
   contents and shows the native SVG next to the library rendering (`<canvas>`),

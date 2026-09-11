@@ -3,6 +3,7 @@
 // Imports the library straight from JSR.io and renders SVG sources to raw
 // RGBA on the server. The browser draws the returned pixels onto a <canvas> —
 // no PNG encoder, no client-side Wasm.
+import { decodeBase64Url } from "@std/encoding/base64url";
 import { svg2rgba } from "@tksh/svg2ui8a/svg2rgba";
 import { svg2usvg } from "@tksh/svg2ui8a/svg2usvg";
 
@@ -78,8 +79,23 @@ async function readJsonBody(req: Request): Promise<Record<string, unknown>> {
   return body as Record<string, unknown>;
 }
 
-function resolveSvg(body: Record<string, unknown>): string {
-  if (body.svg === undefined) return SVG_TEXT;
+function resolveSvg(
+  body: Record<string, unknown>,
+  querySvg: string | null,
+): string {
+  if (body.svg === undefined) {
+    // No POST body svg: fall back to `?svg=` (base64-encoded SVG), then to
+    // the bundled sample. An empty query value behaves as "not given".
+    if (querySvg === null || querySvg === "") return SVG_TEXT;
+    const svg = decodeQuerySvg(querySvg);
+    if (svg.length === 0) {
+      throw new Error("svg must be a non-empty string");
+    }
+    if (svg.length > MAX_SVG_LENGTH) {
+      throw new Error(`svg must be at most ${MAX_SVG_LENGTH} characters`);
+    }
+    return svg;
+  }
   if (typeof body.svg !== "string" || body.svg.length === 0) {
     throw new Error("svg must be a non-empty string");
   }
@@ -89,13 +105,27 @@ function resolveSvg(body: Record<string, unknown>): string {
   return body.svg;
 }
 
+// Decodes a `?svg=` query value: base64url-encoded SVG (RFC 4648 §5),
+// via `decodeBase64Url` from `jsr:@std/encoding`. Base64url is URL-safe
+// (`-` and `_` instead of `+` and `/`), so values can be embedded in URLs
+// raw. Anything else (standard-base64 characters, garbage) is a 400.
+function decodeQuerySvg(value: string): string {
+  let bytes: Uint8Array;
+  try {
+    bytes = decodeBase64Url(value);
+  } catch {
+    throw new Error("svg query param must be valid base64url-encoded SVG");
+  }
+  return new TextDecoder().decode(bytes);
+}
+
 async function handleRender(req: Request): Promise<Response> {
   const url = new URL(req.url);
   let body: Record<string, unknown>;
   let svg: string;
   try {
     body = await readJsonBody(req);
-    svg = resolveSvg(body);
+    svg = resolveSvg(body, url.searchParams.get("svg"));
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 400 });
   }
@@ -124,9 +154,10 @@ async function handleRender(req: Request): Promise<Response> {
 }
 
 async function handleUsvg(req: Request): Promise<Response> {
+  const url = new URL(req.url);
   let svg: string;
   try {
-    svg = resolveSvg(await readJsonBody(req));
+    svg = resolveSvg(await readJsonBody(req), url.searchParams.get("svg"));
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 400 });
   }

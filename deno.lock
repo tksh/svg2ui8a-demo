@@ -1,16 +1,21 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@std/encoding@1": "1.0.11",
     "jsr:@tksh/svg2ui8a@*": "0.3.0",
     "jsr:@tksh/svg2ui8a@0.3": "0.3.0"
   },
   "jsr": {
+    "@std/encoding@1.0.11": {
+      "integrity": "e7cef2f0b3153bccc17431e7c864a1de03a4b6d9647389c43e08aaa775d37385"
+    },
     "@tksh/svg2ui8a@0.3.0": {
       "integrity": "913cbf8cb098fc5e3c72abf7817408cd24761c0ba7583000f6bfe616ef2524a9"
     }
   },
   "workspace": {
     "dependencies": [
+      "jsr:@std/encoding@1",
       "jsr:@tksh/svg2ui8a@0.3"
     ]
   }
