@@ -13,6 +13,7 @@
     "start": "deno run --allow-net --allow-read main.ts",
     "check": "deno check main.ts",
     "fmt": "deno fmt",
-    "lint": "deno lint"
+    "lint": "deno lint",
+    "test": "deno test og_test.ts"
   }
 }
