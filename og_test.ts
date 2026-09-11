@@ -1,9 +1,12 @@
 import { assert, assertEquals } from "jsr:@std/assert";
 import {
   buildShapeSvg,
+  escapeAttr,
+  genericMeta,
   OGP_HEIGHT,
   OGP_WIDTH,
   parseShapeParams,
+  shapeMeta,
 } from "./og.ts";
 
 function params(query: string): URLSearchParams {
@@ -74,5 +77,37 @@ Deno.test("buildShapeSvg centers a circle on the OGP canvas", () => {
   assertEquals(
     buildShapeSvg({ shape: "circle", fill: "blue", r: 50 }),
     `<svg xmlns="http://www.w3.org/2000/svg" width="${OGP_WIDTH}" height="${OGP_HEIGHT}" viewBox="0 0 ${OGP_WIDTH} ${OGP_HEIGHT}"><circle cx="600" cy="315" r="50" fill="blue"/></svg>`,
+  );
+});
+
+Deno.test("shapeMeta describes a red rect", () => {
+  assertEquals(shapeMeta({ shape: "rect", fill: "red", w: 2, h: 2 }), {
+    title: "Red filled rect",
+    description: "size: width=2 height=2",
+  });
+});
+
+Deno.test("shapeMeta describes a blue circle and uppercases hex", () => {
+  assertEquals(shapeMeta({ shape: "circle", fill: "blue", r: 50 }), {
+    title: "Blue filled circle",
+    description: "size: radius=50",
+  });
+  assertEquals(
+    shapeMeta({ shape: "rect", fill: "#ff0000", w: 1, h: 1 }).title,
+    "#FF0000 filled rect",
+  );
+});
+
+Deno.test("genericMeta falls back to a static card", () => {
+  assertEquals(genericMeta(), {
+    title: "svg2ui8a demo image",
+    description: "Rendered with jsr:@tksh/svg2ui8a",
+  });
+});
+
+Deno.test("escapeAttr neutralizes attribute breakouts", () => {
+  assertEquals(
+    escapeAttr(`"><script>alert(1)</script>&`),
+    `&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;&amp;`,
   );
 });

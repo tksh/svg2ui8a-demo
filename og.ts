@@ -79,3 +79,45 @@ export function buildShapeSvg(spec: ShapeSpec): string {
     : `cx="${OGP_WIDTH / 2}" cy="${OGP_HEIGHT / 2}" r="${spec.r}"`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${OGP_WIDTH}" height="${OGP_HEIGHT}" viewBox="0 0 ${OGP_WIDTH} ${OGP_HEIGHT}"><${spec.shape} ${attrs} fill="${spec.fill}"/></svg>`;
 }
+
+export interface ShapeMeta {
+  title: string;
+  description: string;
+}
+
+function prettyFill(fill: string): string {
+  if (fill.startsWith("#")) return fill.toUpperCase();
+  return fill[0].toUpperCase() + fill.slice(1);
+}
+
+// Derives og:title / og:description from the validated shape params (the
+// source of truth — never parsed back out of SVG text).
+export function shapeMeta(spec: ShapeSpec): ShapeMeta {
+  if (spec.shape === "rect") {
+    return {
+      title: `${prettyFill(spec.fill)} filled rect`,
+      description: `size: width=${spec.w} height=${spec.h}`,
+    };
+  }
+  return {
+    title: `${prettyFill(spec.fill)} filled circle`,
+    description: `size: radius=${spec.r}`,
+  };
+}
+
+// Fallback for absent/invalid params: scrapers get a generic card, never a 500.
+export function genericMeta(): ShapeMeta {
+  return {
+    title: "svg2ui8a demo image",
+    description: "Rendered with jsr:@tksh/svg2ui8a",
+  };
+}
+
+// Escapes a value for use inside a double-quoted HTML attribute.
+export function escapeAttr(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
