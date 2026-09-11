@@ -169,9 +169,14 @@ async function handleRgba(req: Request): Promise<Response> {
   }
 }
 
-// SVG -> raw RGBA (svg2rgba) -> PNG bytes (photon), served as image/png so
-// the URL is directly usable e.g. as an og:image. Same inputs as /api/rgba.
-async function handlePng(req: Request): Promise<Response> {
+// Shared body for the encoded-image endpoints (/api/png, /api/webp):
+// SVG -> raw RGBA (svg2rgba) -> encoded bytes (photon), served directly so
+// the URL is usable e.g. as an og:image. Same inputs as /api/rgba.
+async function handleEncoded(
+  req: Request,
+  encode: (img: PhotonImage) => Uint8Array,
+  contentType: string,
+): Promise<Response> {
   let input: {
     svg: string;
     width: number | undefined;
@@ -188,10 +193,10 @@ async function handlePng(req: Request): Promise<Response> {
       height: input.height,
     });
     using img = new PhotonImage(result.pixels, result.width, result.height);
-    const png = img.get_bytes();
-    return new Response(png.slice().buffer as ArrayBuffer, {
+    const bytes = encode(img);
+    return new Response(bytes.slice().buffer as ArrayBuffer, {
       headers: {
-        "content-type": "image/png",
+        "content-type": contentType,
         // Output is a deterministic function of the URL: safe to cache.
         "cache-control": "public, max-age=86400",
       },
@@ -199,6 +204,18 @@ async function handlePng(req: Request): Promise<Response> {
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });
   }
+}
+
+async function handlePng(req: Request): Promise<Response> {
+  return await handleEncoded(req, (img) => img.get_bytes(), "image/png");
+}
+
+async function handleWebp(req: Request): Promise<Response> {
+  return await handleEncoded(
+    req,
+    (img) => img.get_bytes_webp(),
+    "image/webp",
+  );
 }
 
 async function handleUsvg(req: Request): Promise<Response> {
@@ -236,6 +253,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     pathname === "/api/png" && (req.method === "GET" || req.method === "POST")
   ) {
     return await handlePng(req);
+  }
+  if (
+    pathname === "/api/webp" && (req.method === "GET" || req.method === "POST")
+  ) {
+    return await handleWebp(req);
   }
   if (pathname === "/api/source") {
     return new Response(SVG_TEXT, {

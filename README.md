@@ -19,16 +19,16 @@ deno task dev
   alphaMode, pixelsBase64 }`; `GET|POST /api/usvg` uses
   `svg2usvg` (`jsr:@tksh/svg2ui8a/svg2usvg`), converts the SVG into a
   `Uint8Array` and decodes it back into the normalized usvg string, returns
-  `{ byteLength, usvg }`; `GET|POST /api/png` renders via `svg2rgba` then
-  encodes PNG bytes with `PhotonImage` (`jsr:@denext/photon`) and serves them
-  directly as `image/png`, so the URL works as an `og:image`:
-  `/api/png?svg=<base64url>&width=1200&height=630`. POST takes a JSON body
-  `{ svg?, width?, height? }` (the page sends the edited textarea contents); GET
-  takes query params `?svg=&width=&height=`, where `svg` is a base64url-encoded
-  SVG string (decoded with `decodeBase64Url` from `jsr:@std/encoding`; URL-safe,
-  so no percent-encoding needed, padding optional). Without `svg`, GET renders
-  the bundled `ghostscript_tiger.svg`. POST body values take precedence over
-  query params.
+  `{ byteLength, usvg }`; `GET|POST /api/png` and `GET|POST /api/webp` render
+  via `svg2rgba` then encode with `PhotonImage` (`jsr:@denext/photon`) and serve
+  the bytes directly as `image/png` / `image/webp`, so the URL works as an
+  `og:image`: `/api/png?svg=<base64url>&width=1200&height=630`. POST takes a
+  JSON body `{ svg?, width?, height? }` (the page sends the edited textarea
+  contents); GET takes query params `?svg=&width=&height=`, where `svg` is a
+  base64url-encoded SVG string (decoded with `decodeBase64Url` from
+  `jsr:@std/encoding`; URL-safe, so no percent-encoding needed, padding
+  optional). Without `svg`, GET renders the bundled `ghostscript_tiger.svg`.
+  POST body values take precedence over query params.
 - `public/index.html` + `public/app.js` — sample dropdown (Ghostscript Tiger by
   default, Straightlines) plus an editable SVG textarea; Render posts its
   contents and shows the native SVG next to the library rendering (`<canvas>`),
