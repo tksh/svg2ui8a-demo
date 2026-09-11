@@ -1,11 +1,15 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@denext/photon@~0.3.5": "0.3.5",
     "jsr:@std/encoding@1": "1.0.11",
     "jsr:@tksh/svg2ui8a@*": "0.3.0",
     "jsr:@tksh/svg2ui8a@0.3": "0.3.0"
   },
   "jsr": {
+    "@denext/photon@0.3.5": {
+      "integrity": "0a1410896f03b7d6c3123756643d497263fe8b084ecdc4aaaf12ee5819a76147"
+    },
     "@std/encoding@1.0.11": {
       "integrity": "e7cef2f0b3153bccc17431e7c864a1de03a4b6d9647389c43e08aaa775d37385"
     },
@@ -15,6 +19,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@denext/photon@~0.3.5",
       "jsr:@std/encoding@1",
       "jsr:@tksh/svg2ui8a@0.3"
     ]

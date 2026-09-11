@@ -2,6 +2,7 @@
   "name": "@tksh/svg2ui8a-demo",
   "version": "0.1.0",
   "imports": {
+    "@denext/photon": "jsr:@denext/photon@^0.3.5",
     "@std/encoding/base64url": "jsr:@std/encoding@^1/base64url",
     "@tksh/svg2ui8a": "jsr:@tksh/svg2ui8a@^0.3.0",
     "@tksh/svg2ui8a/svg2rgba": "jsr:@tksh/svg2ui8a@^0.3.0/svg2rgba",

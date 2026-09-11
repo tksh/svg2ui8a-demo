@@ -63,7 +63,7 @@ async function render() {
   statusEl.textContent = "Rendering…";
   try {
     const [data, usvgData] = await Promise.all([
-      postJson("/api/render", { svg, width, height }),
+      postJson("/api/rgba", { svg, width, height }),
       postJson("/api/usvg", { svg }),
     ]);
     const pixels = decodeBase64(data.pixelsBase64);

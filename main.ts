@@ -3,6 +3,7 @@
 // Imports the library straight from JSR.io and renders SVG sources to raw
 // RGBA on the server. The browser draws the returned pixels onto a <canvas> —
 // no PNG encoder, no client-side Wasm.
+import { PhotonImage } from "@denext/photon";
 import { decodeBase64Url } from "@std/encoding/base64url";
 import { svg2rgba } from "@tksh/svg2ui8a/svg2rgba";
 import { svg2usvg } from "@tksh/svg2ui8a/svg2usvg";
@@ -119,34 +120,81 @@ function decodeQuerySvg(value: string): string {
   return new TextDecoder().decode(bytes);
 }
 
-async function handleRender(req: Request): Promise<Response> {
+// Shared input for the render-family endpoints: POST JSON body values win,
+// GET query params fill the gaps, and the bundled sample is the default SVG.
+// Throws on invalid input (callers map this to a 400).
+async function resolveRenderInput(
+  req: Request,
+): Promise<
+  { svg: string; width: number | undefined; height: number | undefined }
+> {
   const url = new URL(req.url);
-  let body: Record<string, unknown>;
-  let svg: string;
-  try {
-    body = await readJsonBody(req);
-    svg = resolveSvg(body, url.searchParams.get("svg"));
-  } catch (e) {
-    return Response.json({ error: String(e) }, { status: 400 });
-  }
+  const body = await readJsonBody(req);
+  const svg = resolveSvg(body, url.searchParams.get("svg"));
   const width = parseSizeParam(body.width ?? url.searchParams.get("width"));
   const height = parseSizeParam(
     body.height ?? url.searchParams.get("height"),
   );
   if (Number.isNaN(width) || Number.isNaN(height)) {
-    return Response.json(
-      { error: "width/height must be integers in 1..4096 when given" },
-      { status: 400 },
-    );
+    throw new Error("width/height must be integers in 1..4096 when given");
+  }
+  return { svg, width, height };
+}
+
+async function handleRgba(req: Request): Promise<Response> {
+  let input: {
+    svg: string;
+    width: number | undefined;
+    height: number | undefined;
+  };
+  try {
+    input = await resolveRenderInput(req);
+  } catch (e) {
+    return Response.json({ error: String(e) }, { status: 400 });
   }
 
   try {
-    const result = await svg2rgba(svg, { width, height });
+    const result = await svg2rgba(input.svg, {
+      width: input.width,
+      height: input.height,
+    });
     return Response.json({
       width: result.width,
       height: result.height,
       alphaMode: result.alphaMode,
       pixelsBase64: encodeBase64(result.pixels),
+    });
+  } catch (e) {
+    return Response.json({ error: String(e) }, { status: 500 });
+  }
+}
+
+// SVG -> raw RGBA (svg2rgba) -> PNG bytes (photon), served as image/png so
+// the URL is directly usable e.g. as an og:image. Same inputs as /api/rgba.
+async function handlePng(req: Request): Promise<Response> {
+  let input: {
+    svg: string;
+    width: number | undefined;
+    height: number | undefined;
+  };
+  try {
+    input = await resolveRenderInput(req);
+  } catch (e) {
+    return Response.json({ error: String(e) }, { status: 400 });
+  }
+  try {
+    const result = await svg2rgba(input.svg, {
+      width: input.width,
+      height: input.height,
+    });
+    using img = new PhotonImage(result.pixels, result.width, result.height);
+    const png = img.get_bytes();
+    return new Response(png.slice().buffer as ArrayBuffer, {
+      headers: {
+        "content-type": "image/png",
+        // Output is a deterministic function of the URL: safe to cache.
+        "cache-control": "public, max-age=86400",
+      },
     });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });
@@ -174,15 +222,20 @@ async function handleUsvg(req: Request): Promise<Response> {
 Deno.serve(async (req: Request): Promise<Response> => {
   const { pathname } = new URL(req.url);
   if (
-    pathname === "/api/render" &&
+    pathname === "/api/rgba" &&
     (req.method === "GET" || req.method === "POST")
   ) {
-    return await handleRender(req);
+    return await handleRgba(req);
   }
   if (
     pathname === "/api/usvg" && (req.method === "GET" || req.method === "POST")
   ) {
     return await handleUsvg(req);
+  }
+  if (
+    pathname === "/api/png" && (req.method === "GET" || req.method === "POST")
+  ) {
+    return await handlePng(req);
   }
   if (pathname === "/api/source") {
     return new Response(SVG_TEXT, {
