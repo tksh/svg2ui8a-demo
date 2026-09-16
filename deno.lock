@@ -1,16 +1,15 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@denext/photon@~0.3.5": "0.3.5",
+    "jsr:@denext/photon@~0.3.6": "0.3.6",
     "jsr:@std/assert@*": "1.0.19",
-    "jsr:@std/encoding@1": "1.0.11",
+    "jsr:@std/encoding@^1.0.11": "1.0.11",
     "jsr:@std/internal@^1.0.12": "1.0.14",
-    "jsr:@tksh/svg2ui8a@*": "0.3.0",
-    "jsr:@tksh/svg2ui8a@0.3": "0.3.0"
+    "jsr:@tksh/svg2ui8a@~0.3.4": "0.3.4"
   },
   "jsr": {
-    "@denext/photon@0.3.5": {
-      "integrity": "0a1410896f03b7d6c3123756643d497263fe8b084ecdc4aaaf12ee5819a76147"
+    "@denext/photon@0.3.6": {
+      "integrity": "a7ed32df0786fe71d793b387b8c34742b8a97975ed04cdd8ee067222af96cb68"
     },
     "@std/assert@1.0.19": {
       "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
@@ -24,15 +23,15 @@
     "@std/internal@1.0.14": {
       "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
     },
-    "@tksh/svg2ui8a@0.3.0": {
-      "integrity": "913cbf8cb098fc5e3c72abf7817408cd24761c0ba7583000f6bfe616ef2524a9"
+    "@tksh/svg2ui8a@0.3.4": {
+      "integrity": "dc6be10a52bf60df83ee88ddcc5bef369aee827eb1cc2925170b9478ab129c94"
     }
   },
   "workspace": {
     "dependencies": [
-      "jsr:@denext/photon@~0.3.5",
-      "jsr:@std/encoding@1",
-      "jsr:@tksh/svg2ui8a@0.3"
+      "jsr:@denext/photon@~0.3.6",
+      "jsr:@std/encoding@^1.0.11",
+      "jsr:@tksh/svg2ui8a@~0.3.4"
     ]
   }
 }
