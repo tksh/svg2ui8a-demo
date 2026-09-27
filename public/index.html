@@ -21,6 +21,7 @@
         <label>Height <input id="height" type="number" value="512" min="1" max="4096" /></label>
         <label><input id="dpr" type="checkbox" checked /> Auto size × devicePixelRatio</label>
         <label><input id="pixelated" type="checkbox" /> Pixelated (raw pixels)</label>
+        <label><input id="bbox-visible" type="checkbox" checked /> Bounding boxes</label>
         <button id="render">Render</button>
       </section>
 
@@ -35,9 +36,57 @@
           </figure>
           <figure>
             <figcaption>svg2ui8a RGBA (<code>&lt;canvas&gt;</code>)</figcaption>
-            <canvas id="output"></canvas>
+            <div class="canvas-wrap">
+              <canvas id="output"></canvas>
+              <canvas id="bbox-overlay"></canvas>
+            </div>
           </figure>
         </div>
+      </section>
+
+      <section>
+        <h2>Bounding boxes <small>(<code>svg2rgba</code>, usvg root)</small></h2>
+        <p id="bbox-meta">Loading…</p>
+        <table class="bbox">
+          <thead>
+            <tr>
+              <th>usvg box</th>
+              <th>Natural SVG canvas coords</th>
+              <th>Output pixel coords</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-box="absBoundingBox">
+              <th
+                scope="row"><input type="checkbox" class="bbox-toggle" data-box="absBoundingBox" checked /><span class="swatch swatch-abs"></span><code>absBoundingBox</code></th>
+              <td class="bbox-natural">…</td>
+              <td class="bbox-pixels">…</td>
+              <td class="bbox-note"></td>
+            </tr>
+            <tr data-box="absStrokeBoundingBox">
+              <th
+                scope="row"><input type="checkbox" class="bbox-toggle" data-box="absStrokeBoundingBox" checked /><span class="swatch swatch-stroke"></span><code>absStrokeBoundingBox</code></th>
+              <td class="bbox-natural">…</td>
+              <td class="bbox-pixels">…</td>
+              <td class="bbox-note"></td>
+            </tr>
+            <tr data-box="absLayerBoundingBox">
+              <th
+                scope="row"><input type="checkbox" class="bbox-toggle" data-box="absLayerBoundingBox" checked /><span class="swatch swatch-layer"></span><code>absLayerBoundingBox</code></th>
+              <td class="bbox-natural">…</td>
+              <td class="bbox-pixels">…</td>
+              <td class="bbox-note"></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="hint">
+          Geometry, geometry plus stroke, and the layer (filter) box — all in
+          natural SVG canvas units. Output pixel coords are those values scaled
+          by <code>output / natural</code> per axis; raw values stay canvas-sized
+          even when width/height are overridden. Uncheck a row to hide its
+          outline; the values stay listed.
+        </p>
       </section>
 
       <section>

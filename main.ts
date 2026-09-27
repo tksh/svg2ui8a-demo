@@ -170,8 +170,13 @@ async function handleRgba(req: Request): Promise<Response> {
     return Response.json({
       width: result.width,
       height: result.height,
+      naturalWidth: result.naturalWidth,
+      naturalHeight: result.naturalHeight,
       alphaMode: result.alphaMode,
       pixelsBase64: encodeBase64(result.pixels),
+      absBoundingBox: result.absBoundingBox,
+      absStrokeBoundingBox: result.absStrokeBoundingBox,
+      absLayerBoundingBox: result.absLayerBoundingBox,
     });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });
@@ -257,7 +262,7 @@ function publicBaseUrl(req: Request): string {
 // Dynamic OGP card page. Scrapers don't run JS, so the meta tags are
 // rendered into the HTML server-side. Absent/invalid params fall back to a
 // generic card (never an error).
-async function handleOg(req: Request): Promise<Response> {
+function handleOg(req: Request): Response {
   const url = new URL(req.url);
   const spec = parseShapeParams(url.searchParams);
   const meta = spec === null ? genericMeta() : shapeMeta(spec);

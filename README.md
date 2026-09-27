@@ -15,8 +15,9 @@ deno task dev
 
 - `main.ts` — `Deno.serve` static server with three APIs: `GET|POST /api/rgba`
   uses `svg2rgba` (`jsr:@tksh/svg2ui8a/svg2rgba`), returns
-  `{ width, height,
-  alphaMode, pixelsBase64 }`; `GET|POST /api/usvg` uses
+  `{ width, height, naturalWidth, naturalHeight, alphaMode, pixelsBase64,
+  absBoundingBox, absStrokeBoundingBox, absLayerBoundingBox }`
+  (the three boxes were added in svg2ui8a 0.4.0); `GET|POST /api/usvg` uses
   `svg2usvg` (`jsr:@tksh/svg2ui8a/svg2usvg`), converts the SVG into a
   `Uint8Array` and decodes it back into the normalized usvg string, returns
   `{ byteLength, usvg }`; `GET|POST /api/png` and `GET|POST /api/webp` render
@@ -43,6 +44,18 @@ deno task dev
   default; requests the width/height inputs scaled by `devicePixelRatio`,
   clamped to the 4096px server limit) and `Pixelated` (off by default;
   nearest-neighbor display scaling for raw-pixel inspection).
+- Bounding boxes — a table always lists all three `RgbaResult` boxes (`null`
+  included) in both natural canvas coordinates and mapped output pixels; color-
+  and dash-coded rects are drawn on a separate transparent canvas stacked over
+  the raster one, so the library output stays untouched. The overlay bitmap is
+  half an outline line width larger on every side (position/size in percent), so
+  outlines that sit on the raster boundary still draw at full width while the
+  raster keeps its exact output pixels. The `Bounding boxes` checkbox hides the
+  overlay, and each table row has a checkbox that hides just that box's outline.
+  `public/bbox.js` holds the pure mapping/formatting/drawing helpers,
+  unit-tested in `bbox_test.ts`. Straightlines is the clearest sample: its
+  strokes extend past the geometry box, so `absBoundingBox` and
+  `absStrokeBoundingBox` differ visibly.
 - `public/ghostscript_tiger.svg` — Ghostscript Tiger sample (default).
 - `public/straightlines.svg` — straight-lines sample (tksh/Straightlines
   ruleset).

@@ -37,6 +37,26 @@ canvas {
     16px 16px;
 }
 
+/* The bbox overlay is stacked exactly over the raster, so its rects share the
+   bitmap coordinates. Transparent and click-through. */
+.canvas-wrap {
+  position: relative;
+}
+
+.canvas-wrap > canvas {
+  display: block;
+}
+
+/* The bbox overlay is stacked over the raster; app.js grows its bitmap by half
+   a line width on every side and sets left/top/width/height (in percent) so
+   outlines on the raster boundary still draw at full width. Transparent and
+   click-through. */
+#bbox-overlay {
+  position: absolute;
+  background: none;
+  pointer-events: none;
+}
+
 /* Opt-in raw-pixel inspection: nearest-neighbor display scaling. */
 canvas.pixelated {
   image-rendering: pixelated;
@@ -55,4 +75,62 @@ textarea {
   font-family: monospace;
   font-size: 0.8rem;
   resize: vertical;
+}
+
+/* Bounding-box table: swatches match the overlay outline colors/styles. */
+table.bbox {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+table.bbox th,
+table.bbox td {
+  border: 1px solid currentColor;
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+table.bbox td {
+  font-family: monospace;
+}
+
+.bbox-note,
+.hint {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.swatch {
+  display: inline-block;
+  width: 1.1rem;
+  height: 0;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  border-top: 3px solid;
+}
+
+.swatch-abs {
+  border-top-color: #ff0000;
+}
+
+.swatch-stroke {
+  border-top-color: #00ff00;
+  border-top-style: dashed;
+}
+
+.swatch-layer {
+  border-top-color: #0000ff;
+  border-top-style: dotted;
+}
+
+.bbox-toggle {
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+/* Dim the swatch of a row whose outline is hidden. */
+tr[data-box]:has(.bbox-toggle:not(:checked)) .swatch {
+  opacity: 0.3;
 }
