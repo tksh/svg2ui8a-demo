@@ -74,6 +74,10 @@ Request resolution rules (`resolveRenderInput`, main.ts:144):
 - `width`/`height` must be integers in `1..4096` (`parseSizeParam`); the same
   4096 cap is mirrored in `public/app.js` (`scaledSize`) and in the HTML `max`
   attributes.
+- `alphaMode` (POST body or `?alphaMode=`) must be `"straight"` or
+  `"premultiplied"` when given; it maps straight onto
+  `Svg2RgbaOptions.alphaMode` and is echoed back in the `/api/rgba` response so
+  the UI shows what was applied.
 - `region` (POST object `{x,y,width,height}`, else GET `rx/ry/rw/rh`) selects
   the rendered window in canvas coordinates and **wins over `fit=bounds`**; the
   values must be finite with positive width/height and are not clamped

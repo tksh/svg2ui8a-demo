@@ -73,6 +73,20 @@ function parseSizeParam(value: unknown): number | undefined {
   return n;
 }
 
+// `alphaMode` maps straight onto Svg2RgbaOptions.alphaMode; omitted keeps the
+// library default ("straight"). Everything else is a 400.
+function parseAlphaModeParam(
+  value: unknown,
+): "straight" | "premultiplied" | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  if (value !== "straight" && value !== "premultiplied") {
+    throw new Error(
+      'alphaMode must be "straight" or "premultiplied" when given',
+    );
+  }
+  return value;
+}
+
 // Max SVG body accepted via POST (plain-text XML, ~1MB is generous).
 const MAX_SVG_LENGTH = 1_000_000;
 
@@ -137,6 +151,7 @@ interface RenderInput {
   svg: string;
   width: number | undefined;
   height: number | undefined;
+  alphaMode: "straight" | "premultiplied" | undefined;
   region: RectF | undefined;
   fit: boolean;
 }
@@ -152,10 +167,13 @@ async function resolveRenderInput(req: Request): Promise<RenderInput> {
   if (Number.isNaN(width) || Number.isNaN(height)) {
     throw new Error("width/height must be integers in 1..4096 when given");
   }
+  const alphaMode = parseAlphaModeParam(
+    body.alphaMode ?? url.searchParams.get("alphaMode"),
+  );
   // An explicit region wins over fit=bounds; both are optional.
   const region = parseRegion(body, url.searchParams);
   const fit = region === undefined && parseFit(body, url.searchParams);
-  return { svg, width, height, region, fit };
+  return { svg, width, height, alphaMode, region, fit };
 }
 
 // Applies fit=bounds by probing the boxes: they are independent of the output
@@ -181,6 +199,7 @@ async function handleRgba(req: Request): Promise<Response> {
     const result = await svg2rgba(input.svg, {
       width: input.width,
       height: input.height,
+      ...(input.alphaMode === undefined ? {} : { alphaMode: input.alphaMode }),
       ...(region === undefined ? {} : { region }),
     });
     return Response.json({
@@ -226,6 +245,7 @@ async function handleEncoded(
     const result = await svg2rgba(input.svg, {
       width: input.width,
       height: input.height,
+      ...(input.alphaMode === undefined ? {} : { alphaMode: input.alphaMode }),
       ...(region === undefined ? {} : { region }),
     });
     using img = new PhotonImage(result.pixels, result.width, result.height);

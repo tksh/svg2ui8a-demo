@@ -26,14 +26,17 @@ deno task dev
   (`jsr:@denext/photon`) and serve the bytes directly as `image/png` /
   `image/webp`, so the URL works as an `og:image`:
   `/api/png?svg=<base64url>&width=1200&height=630`. POST takes a JSON body
-  `{ svg?, width?, height?, region?, fit? }` (the page sends the edited textarea
-  contents); GET takes query params `?svg=&width=&height=&rx=&ry=&rw=&rh=&fit=`,
-  where `svg` is a base64url-encoded SVG string (decoded with `decodeBase64Url`
-  from `jsr:@std/encoding`; URL-safe, so no percent-encoding needed, padding
+  `{ svg?, width?, height?, alphaMode?, region?, fit? }` (the page sends the
+  edited textarea contents); GET takes query params
+  `?svg=&width=&height=&alphaMode=&rx=&ry=&rw=&rh=&fit=`, where `svg` is a
+  base64url-encoded SVG string (decoded with `decodeBase64Url` from
+  `jsr:@std/encoding`; URL-safe, so no percent-encoding needed, padding
   optional). `region` selects the rendered window in canvas coordinates and wins
   over `fit=bounds`, which probes the boxes and pads their union by
-  `max(1, 1%)`. Without `svg`, GET renders the bundled `ghostscript_tiger.svg`.
-  POST body values take precedence over query params.
+  `max(1, 1%)`. `alphaMode` is `"straight"` (default) or `"premultiplied"` and
+  is echoed back so the UI shows what was applied. Without `svg`, GET renders
+  the bundled `ghostscript_tiger.svg`. POST body values take precedence over
+  query params.
 - `og.ts` + `GET /og` — dynamic OGP cards (scrapers don't run JS, so the meta
   tags are rendered server-side). Shape params `?shape=rect&fill=red&w=2&h=2` or
   `?shape=circle&fill=blue&r=50` build a centered shape on a 1200×630 SVG;
