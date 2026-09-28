@@ -6,7 +6,7 @@
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/encoding@^1.0.11": "1.0.11",
     "jsr:@std/internal@^1.0.12": "1.0.14",
-    "jsr:@tksh/svg2ui8a@0.4": "0.4.0"
+    "jsr:@tksh/svg2ui8a@0.5": "0.5.0"
   },
   "jsr": {
     "@denext/photon@0.3.6": {
@@ -24,8 +24,8 @@
     "@std/internal@1.0.14": {
       "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
     },
-    "@tksh/svg2ui8a@0.4.0": {
-      "integrity": "9048c4ace18fff222f0af56314a9f97fb4a03c9380614db7d4c0505009688c67"
+    "@tksh/svg2ui8a@0.5.0": {
+      "integrity": "ab08fa804848b4e1b37936fed9bcb696752d5704975713fd4baaedd6e97b6f29"
     }
   },
   "workspace": {
@@ -33,7 +33,7 @@
       "jsr:@denext/photon@~0.3.6",
       "jsr:@std/assert@^1.0.19",
       "jsr:@std/encoding@^1.0.11",
-      "jsr:@tksh/svg2ui8a@0.4"
+      "jsr:@tksh/svg2ui8a@0.5"
     ]
   }
 }

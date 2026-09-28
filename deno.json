@@ -5,9 +5,9 @@
     "@denext/photon": "jsr:@denext/photon@^0.3.6",
     "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/encoding/base64url": "jsr:@std/encoding@^1.0.11/base64url",
-    "@tksh/svg2ui8a": "jsr:@tksh/svg2ui8a@^0.4.0",
-    "@tksh/svg2ui8a/svg2rgba": "jsr:@tksh/svg2ui8a@^0.4.0/svg2rgba",
-    "@tksh/svg2ui8a/svg2usvg": "jsr:@tksh/svg2ui8a@^0.4.0/svg2usvg"
+    "@tksh/svg2ui8a": "jsr:@tksh/svg2ui8a@^0.5.0",
+    "@tksh/svg2ui8a/svg2rgba": "jsr:@tksh/svg2ui8a@^0.5.0/svg2rgba",
+    "@tksh/svg2ui8a/svg2usvg": "jsr:@tksh/svg2ui8a@^0.5.0/svg2usvg"
   },
   "tasks": {
     "dev": "deno run --allow-net --allow-read main.ts",
