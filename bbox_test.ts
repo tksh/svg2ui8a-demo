@@ -2,14 +2,18 @@ import { assert, assertEquals } from "@std/assert";
 import {
   BOXES,
   boxLineWidth,
+  boxOverflow,
   drawBoxOverlay,
+  drawViewBoxOutline,
   formatRect,
   isClipped,
   overlayLayout,
   toPixelRect,
+  VIEWBOX_COLOR,
 } from "./public/bbox.js";
 
 const RECT = { x: 1, y: 2, width: 3, height: 4 };
+const NATURAL = { x: 0, y: 0, width: 10, height: 10 };
 
 Deno.test("BOXES lists the three RgbaResult boxes in draw order", () => {
   assertEquals(BOXES.map((box: { key: string }) => box.key), [
@@ -19,21 +23,26 @@ Deno.test("BOXES lists the three RgbaResult boxes in draw order", () => {
   ]);
 });
 
-Deno.test("BOXES uses one fully saturated channel per color", () => {
+Deno.test("BOXES colors are distinct and avoid the outline magenta", () => {
   const colors = BOXES.map((box: { color: string }) => box.color);
-  assertEquals(colors.length, 3);
+  assertEquals(colors, ["#ff4500", "#00ff00", "#0000ff"]);
   assertEquals(new Set(colors).size, 3);
-  for (const color of colors) {
-    assert(/^#(?:ff0000|00ff00|0000ff)$/.test(color), color);
-  }
 });
 
-Deno.test("toPixelRect maps 1:1 when output matches the natural size", () => {
-  assertEquals(toPixelRect(RECT, 10, 10, 10, 10), RECT);
+Deno.test("the viewBox outline is magenta, distinct from every box", () => {
+  assertEquals(VIEWBOX_COLOR, "#ff00ff");
+  assert(
+    !BOXES.some((box: { color: string }) => box.color === VIEWBOX_COLOR),
+    "no box may reuse the outline color",
+  );
 });
 
-Deno.test("toPixelRect scales uniformly for aspect-ratio sizing", () => {
-  assertEquals(toPixelRect(RECT, 10, 10, 20, 20), {
+Deno.test("toPixelRect maps 1:1 when output matches the region size", () => {
+  assertEquals(toPixelRect(RECT, NATURAL, 10, 10), RECT);
+});
+
+Deno.test("toPixelRect scales uniformly when region and output match", () => {
+  assertEquals(toPixelRect(RECT, NATURAL, 20, 20), {
     x: 2,
     y: 4,
     width: 6,
@@ -43,19 +52,43 @@ Deno.test("toPixelRect scales uniformly for aspect-ratio sizing", () => {
 
 Deno.test("toPixelRect scales each axis independently", () => {
   // Both width and height requested: independent scaling is possible.
-  assertEquals(toPixelRect(RECT, 100, 50, 200, 50), {
-    x: 2,
-    y: 2,
-    width: 6,
-    height: 4,
-  });
+  assertEquals(
+    toPixelRect(RECT, { x: 0, y: 0, width: 100, height: 50 }, 200, 50),
+    {
+      x: 2,
+      y: 2,
+      width: 6,
+      height: 4,
+    },
+  );
 });
 
-Deno.test("toPixelRect keeps null boxes and ignores degenerate natural sizes", () => {
-  assertEquals(toPixelRect(null, 10, 10, 20, 20), null);
-  assertEquals(toPixelRect(RECT, 0, 10, 20, 20), null);
-  assertEquals(toPixelRect(RECT, 10, -1, 20, 20), null);
-  assertEquals(toPixelRect(RECT, Number.NaN, 10, 20, 20), null);
+Deno.test("toPixelRect applies the region origin as an offset", () => {
+  assertEquals(
+    toPixelRect(RECT, { x: 4, y: 4, width: 2, height: 2 }, 4, 4),
+    {
+      x: -6,
+      y: -4,
+      width: 6,
+      height: 8,
+    },
+  );
+});
+
+Deno.test("toPixelRect keeps null boxes and ignores degenerate regions", () => {
+  assertEquals(toPixelRect(null, NATURAL, 20, 20), null);
+  assertEquals(
+    toPixelRect(RECT, { x: 0, y: 0, width: 0, height: 10 }, 20, 20),
+    null,
+  );
+  assertEquals(
+    toPixelRect(RECT, { x: 0, y: 0, width: 10, height: -1 }, 20, 20),
+    null,
+  );
+  assertEquals(
+    toPixelRect(RECT, { x: 0, y: 0, width: Number.NaN, height: 10 }, 20, 20),
+    null,
+  );
 });
 
 Deno.test("formatRect renders null and fixed-decimal coordinates", () => {
@@ -172,7 +205,7 @@ Deno.test("boxLineWidth scales with the raster and never drops below 2", () => {
 
 Deno.test("overlayLayout adds half a line width on every side", () => {
   const layout = overlayLayout(100, 50);
-  assertEquals(layout.padding, 1); // lineWidth 2 at this raster size
+  assertEquals(layout.padding, { top: 1, right: 1, bottom: 1, left: 1 });
   assertEquals(layout.bitmapWidth, 102);
   assertEquals(layout.bitmapHeight, 52);
   // CSS box in percent of the raster box: -1%/-2% offsets, 102%/104% size.
@@ -183,12 +216,24 @@ Deno.test("overlayLayout adds half a line width on every side", () => {
 });
 
 Deno.test("overlayLayout uses big-raster line widths and integral bitmaps", () => {
-  const layout = overlayLayout(1536, 1536); // lineWidth 3 -> padding 1.5
-  assertEquals(layout.padding, 1.5);
-  assertEquals(layout.bitmapWidth, 1539);
-  assertEquals(layout.bitmapHeight, 1539);
+  const layout = overlayLayout(1536, 1536); // lineWidth 3 -> half 1.5 -> ceil 2
+  assertEquals(layout.padding, { top: 2, right: 2, bottom: 2, left: 2 });
+  assertEquals(layout.bitmapWidth, 1540);
+  assertEquals(layout.bitmapHeight, 1540);
   assert(Number.isInteger(layout.bitmapWidth));
-  assertEquals(layout.css.width.toFixed(6), "100.195313");
+  assertEquals(layout.css.width.toFixed(6), "100.260417");
+});
+
+Deno.test("overlayLayout grows uncapped with box overflow per side", () => {
+  const layout = overlayLayout(100, 50, {
+    top: 500,
+    right: 0,
+    bottom: 1.2,
+    left: 8,
+  });
+  assertEquals(layout.padding, { top: 500, right: 1, bottom: 2, left: 8 });
+  assertEquals(layout.bitmapWidth, 109);
+  assertEquals(layout.bitmapHeight, 552);
 });
 
 Deno.test("drawBoxOverlay keeps a raster-sized box fully inside", () => {
@@ -206,4 +251,45 @@ Deno.test("drawBoxOverlay keeps a raster-sized box fully inside", () => {
   const stroke = ops.find((op) => op.method === "strokeRect");
   assertEquals(stroke?.args, [1, 1, 100, 50]);
   assertEquals(stroke?.lineWidth, 2);
+});
+
+Deno.test("boxOverflow reports how far boxes extend beyond the frame", () => {
+  assertEquals(boxOverflow([], 100, 50), {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  });
+  assertEquals(
+    boxOverflow(
+      [
+        { x: 10, y: 5, width: 20, height: 20 },
+        null,
+        { x: -8, y: -2, width: 30, height: 60 },
+      ],
+      100,
+      50,
+    ),
+    { top: 2, right: 0, bottom: 8, left: 8 },
+  );
+});
+
+Deno.test("drawViewBoxOutline draws a 1 px solid magenta window", () => {
+  const { ctx, ops } = recorder();
+  drawViewBoxOutline(
+    ctx,
+    { x: 1, y: 2, width: 30, height: 40 },
+    { top: 3, right: 4, bottom: 5, left: 6 },
+  );
+  assertEquals(ops.map((op) => op.method), [
+    "save",
+    "setLineDash",
+    "strokeRect",
+    "restore",
+  ]);
+  const stroke = ops.find((op) => op.method === "strokeRect");
+  assertEquals(stroke?.strokeStyle, VIEWBOX_COLOR);
+  assertEquals(stroke?.lineWidth, 1);
+  assertEquals(stroke?.args, [7, 5, 30, 40]);
+  assertEquals(ops.find((op) => op.method === "setLineDash")?.args, []);
 });

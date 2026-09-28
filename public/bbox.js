@@ -1,23 +1,24 @@
 // Pure helpers for the bounding-box overlay in the demo UI.
 //
-// svg2ui8a 0.4.0 exposes three usvg boxes on every RgbaResult:
-// `absBoundingBox`, `absStrokeBoundingBox`, and `absLayerBoundingBox`. They are
-// in the SVG's natural canvas coordinates ("userSpaceOnUse"), while the
-// rendered canvas holds `width` x `height` output pixels, so mapping is a
-// per-axis scale that is non-uniform when both output sizes are requested.
+// svg2ui8a exposes three usvg boxes on every RgbaResult (`absBoundingBox`,
+// `absStrokeBoundingBox`, `absLayerBoundingBox`) in the SVG's canvas
+// coordinates. Since 0.5.0 the server also reports the `region` window that
+// was rasterized (defaulting to the natural canvas), so output mapping is
+// "region -> output": a per-axis scale that is non-uniform when both output
+// sizes are requested.
 
 /**
  * @typedef {{ x: number, y: number, width: number, height: number }} RectF
  */
 
-// One entry per RgbaResult box, in drawing order. Pure red/green/blue: each
-// color uses one 255 channel, so they are maximally saturated. The dash
-// patterns keep the outlines distinguishable without relying on color alone.
+// One entry per RgbaResult box, in drawing order. Vivid, mutually distinct
+// colors; the dash patterns keep the outlines distinguishable without relying
+// on color alone.
 export const BOXES = [
   {
     key: "absBoundingBox",
     label: "absBoundingBox",
-    color: "#ff0000",
+    color: "#ff4500",
     dash: [],
   },
   {
@@ -34,23 +35,28 @@ export const BOXES = [
   },
 ];
 
+// The document viewBox outline: magenta, which no box uses and which stands
+// out on gray-heavy artwork like the Straightlines sample (yellow did not).
+// The geometry box moved from red to #ff4500 so it stays distinct from this.
+export const VIEWBOX_COLOR = "#ff00ff";
+
 /**
- * Maps a box from natural SVG canvas coordinates to output pixels.
+ * Maps a box from canvas coordinates to output pixels through the rendered
+ * `region` window. `null` boxes and degenerate regions map to `null`.
  * @param {RectF | null} rect
- * @param {number} naturalWidth
- * @param {number} naturalHeight
- * @param {number} width
- * @param {number} height
+ * @param {RectF} region window rendered into the output
+ * @param {number} width output width in pixels
+ * @param {number} height output height in pixels
  * @returns {RectF | null}
  */
-export function toPixelRect(rect, naturalWidth, naturalHeight, width, height) {
+export function toPixelRect(rect, region, width, height) {
   if (rect === null) return null;
-  if (!(naturalWidth > 0) || !(naturalHeight > 0)) return null;
-  const scaleX = width / naturalWidth;
-  const scaleY = height / naturalHeight;
+  if (!(region.width > 0) || !(region.height > 0)) return null;
+  const scaleX = width / region.width;
+  const scaleY = height / region.height;
   return {
-    x: rect.x * scaleX,
-    y: rect.y * scaleY,
+    x: (rect.x - region.x) * scaleX,
+    y: (rect.y - region.y) * scaleY,
     width: rect.width * scaleX,
     height: rect.height * scaleY,
   };
@@ -70,8 +76,8 @@ export function formatRect(rect) {
 }
 
 /**
- * True when the box sticks out of the rendered canvas, i.e. the image alone
- * cannot show it fully.
+ * True when the box sticks out of the rendered view, i.e. the output frame
+ * (which equals the region window) cannot show it fully.
  * @param {RectF | null} rect
  * @param {number} width
  * @param {number} height
@@ -95,31 +101,72 @@ export function boxLineWidth(width, height) {
 }
 
 /**
- * Overlay geometry for a `width` x `height` raster: the padding (half the
- * outline line width), the overlay bitmap size, and the overlay's CSS box in
- * percent of the raster box. The padding lets an outline that lies exactly on
- * the raster boundary be drawn at full width instead of being clipped in half;
- * the percentages keep the two canvases aligned at any display scale.
+ * How far the mapped boxes extend beyond the output frame, per side, in
+ * output pixels (never negative). The overlay margin uses this so outlines
+ * that fall outside the frame stay visible.
+ * @param {(RectF | null)[]} rects mapped output-pixel boxes
+ * @param {number} width output width in pixels
+ * @param {number} height output height in pixels
+ * @returns {{ top: number, right: number, bottom: number, left: number }}
+ */
+export function boxOverflow(rects, width, height) {
+  const overflow = { top: 0, right: 0, bottom: 0, left: 0 };
+  for (const rect of rects) {
+    if (rect === null) continue;
+    overflow.left = Math.max(overflow.left, -rect.x);
+    overflow.top = Math.max(overflow.top, -rect.y);
+    overflow.right = Math.max(overflow.right, rect.x + rect.width - width);
+    overflow.bottom = Math.max(overflow.bottom, rect.y + rect.height - height);
+  }
+  return {
+    top: Math.max(0, overflow.top),
+    right: Math.max(0, overflow.right),
+    bottom: Math.max(0, overflow.bottom),
+    left: Math.max(0, overflow.left),
+  };
+}
+
+/**
+ * Overlay geometry for a `width` x `height` raster. Every side gets at least
+ * half the outline line width, so an outline lying exactly on the raster
+ * boundary is drawn at full width; any box overflow beyond the frame is added
+ * on top of that, uncapped (abnormal content is meant to be noticeable).
+ * Pads are rounded up because canvas bitmaps are integral, and the CSS box is
+ * in percent of the raster box so the two canvases stay aligned at any
+ * display scale.
  * @param {number} width raster width in pixels
  * @param {number} height raster height in pixels
+ * @param {{ top: number, right: number, bottom: number, left: number }} overflow
  * @returns {{
- *   padding: number,
+ *   padding: { top: number, right: number, bottom: number, left: number },
  *   bitmapWidth: number,
  *   bitmapHeight: number,
  *   css: { left: number, top: number, width: number, height: number },
  * }}
  */
-export function overlayLayout(width, height) {
-  const padding = boxLineWidth(width, height) / 2;
+export function overlayLayout(
+  width,
+  height,
+  overflow = { top: 0, right: 0, bottom: 0, left: 0 },
+) {
+  const half = boxLineWidth(width, height) / 2;
+  const padding = {
+    top: Math.ceil(Math.max(half, overflow.top)),
+    right: Math.ceil(Math.max(half, overflow.right)),
+    bottom: Math.ceil(Math.max(half, overflow.bottom)),
+    left: Math.ceil(Math.max(half, overflow.left)),
+  };
+  const bitmapWidth = width + padding.left + padding.right;
+  const bitmapHeight = height + padding.top + padding.bottom;
   return {
     padding,
-    bitmapWidth: width + 2 * padding,
-    bitmapHeight: height + 2 * padding,
+    bitmapWidth,
+    bitmapHeight,
     css: {
-      left: (-padding / width) * 100,
-      top: (-padding / height) * 100,
-      width: ((width + 2 * padding) / width) * 100,
-      height: ((height + 2 * padding) / height) * 100,
+      left: (-padding.left / width) * 100,
+      top: (-padding.top / height) * 100,
+      width: (bitmapWidth / width) * 100,
+      height: (bitmapHeight / height) * 100,
     },
   };
 }
@@ -129,17 +176,27 @@ export function overlayLayout(width, height) {
  * pattern, nothing else. Expects output-pixel rects; `null` entries are
  * skipped.
  *
- * `padding` is the margin the overlay canvas already extends beyond the raster
- * on every side (see `overlayLayout`), so rects are shifted by it; `width` and
- * `height` stay the raster size.
+ * `padding` is the per-side margin the overlay canvas already extends beyond
+ * the raster (see `overlayLayout`), so rects are shifted by its top/left.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} width raster width in pixels
  * @param {number} height raster height in pixels
  * @param {{ rect: RectF | null, color: string, dash: number[] }[]} boxes
- * @param {number} padding
+ * @param {{ top: number, right: number, bottom: number, left: number }} padding
  */
-export function drawBoxOverlay(ctx, width, height, boxes, padding = 0) {
-  ctx.clearRect(0, 0, width + 2 * padding, height + 2 * padding);
+export function drawBoxOverlay(
+  ctx,
+  width,
+  height,
+  boxes,
+  padding = { top: 0, right: 0, bottom: 0, left: 0 },
+) {
+  ctx.clearRect(
+    0,
+    0,
+    width + padding.left + padding.right,
+    height + padding.top + padding.bottom,
+  );
   const lineWidth = boxLineWidth(width, height);
   ctx.save();
   ctx.lineWidth = lineWidth;
@@ -148,11 +205,34 @@ export function drawBoxOverlay(ctx, width, height, boxes, padding = 0) {
     ctx.strokeStyle = color;
     ctx.setLineDash(dash);
     ctx.strokeRect(
-      rect.x + padding,
-      rect.y + padding,
+      rect.x + padding.left,
+      rect.y + padding.top,
       rect.width,
       rect.height,
     );
   }
+  ctx.restore();
+}
+
+/**
+ * Draws the document viewBox inside a non-natural view: 1 px solid magenta,
+ * after the boxes, so users can see which part of the canvas was previously
+ * clipped. Clipping at the canvas edge is accepted (a custom region may be
+ * smaller than the document window).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {RectF} rect mapped viewBox rect in output pixels
+ * @param {{ top: number, right: number, bottom: number, left: number }} padding
+ */
+export function drawViewBoxOutline(ctx, rect, padding) {
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = VIEWBOX_COLOR;
+  ctx.setLineDash([]);
+  ctx.strokeRect(
+    rect.x + padding.left,
+    rect.y + padding.top,
+    rect.width,
+    rect.height,
+  );
   ctx.restore();
 }
