@@ -16,6 +16,7 @@ import {
   parseShapeParams,
   shapeMeta,
 } from "./og.ts";
+import { fitRegion, parseFit, parseRegion, type RectF } from "./region.ts";
 
 const ROOT = new URL("./public/", import.meta.url);
 const SVG_PATH = new URL("./public/ghostscript_tiger.svg", import.meta.url);
@@ -132,11 +133,15 @@ function decodeQuerySvg(value: string): string {
 // Shared input for the render-family endpoints: POST JSON body values win,
 // GET query params fill the gaps, and the bundled sample is the default SVG.
 // Throws on invalid input (callers map this to a 400).
-async function resolveRenderInput(
-  req: Request,
-): Promise<
-  { svg: string; width: number | undefined; height: number | undefined }
-> {
+interface RenderInput {
+  svg: string;
+  width: number | undefined;
+  height: number | undefined;
+  region: RectF | undefined;
+  fit: boolean;
+}
+
+async function resolveRenderInput(req: Request): Promise<RenderInput> {
   const url = new URL(req.url);
   const body = await readJsonBody(req);
   const svg = resolveSvg(body, url.searchParams.get("svg"));
@@ -147,15 +152,24 @@ async function resolveRenderInput(
   if (Number.isNaN(width) || Number.isNaN(height)) {
     throw new Error("width/height must be integers in 1..4096 when given");
   }
-  return { svg, width, height };
+  // An explicit region wins over fit=bounds; both are optional.
+  const region = parseRegion(body, url.searchParams);
+  const fit = region === undefined && parseFit(body, url.searchParams);
+  return { svg, width, height, region, fit };
+}
+
+// Applies fit=bounds by probing the boxes: they are independent of the output
+// size, so a 1x1 render (4 bytes) is enough to compute the window.
+async function resolveRenderRegion(
+  input: RenderInput,
+): Promise<RectF | undefined> {
+  if (input.region !== undefined || !input.fit) return input.region;
+  const probe = await svg2rgba(input.svg, { width: 1, height: 1 });
+  return fitRegion(probe, probe.naturalWidth, probe.naturalHeight);
 }
 
 async function handleRgba(req: Request): Promise<Response> {
-  let input: {
-    svg: string;
-    width: number | undefined;
-    height: number | undefined;
-  };
+  let input: RenderInput;
   try {
     input = await resolveRenderInput(req);
   } catch (e) {
@@ -163,9 +177,11 @@ async function handleRgba(req: Request): Promise<Response> {
   }
 
   try {
+    const region = await resolveRenderRegion(input);
     const result = await svg2rgba(input.svg, {
       width: input.width,
       height: input.height,
+      ...(region === undefined ? {} : { region }),
     });
     return Response.json({
       width: result.width,
@@ -173,6 +189,14 @@ async function handleRgba(req: Request): Promise<Response> {
       naturalWidth: result.naturalWidth,
       naturalHeight: result.naturalHeight,
       alphaMode: result.alphaMode,
+      // The window that was actually rasterized, defaulting to the natural
+      // canvas, so clients have one mapping input for every render.
+      region: region ?? {
+        x: 0,
+        y: 0,
+        width: result.naturalWidth,
+        height: result.naturalHeight,
+      },
       pixelsBase64: encodeBase64(result.pixels),
       absBoundingBox: result.absBoundingBox,
       absStrokeBoundingBox: result.absStrokeBoundingBox,
@@ -191,20 +215,18 @@ async function handleEncoded(
   encode: (img: PhotonImage) => Uint8Array,
   contentType: string,
 ): Promise<Response> {
-  let input: {
-    svg: string;
-    width: number | undefined;
-    height: number | undefined;
-  };
+  let input: RenderInput;
   try {
     input = await resolveRenderInput(req);
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 400 });
   }
   try {
+    const region = await resolveRenderRegion(input);
     const result = await svg2rgba(input.svg, {
       width: input.width,
       height: input.height,
+      ...(region === undefined ? {} : { region }),
     });
     using img = new PhotonImage(result.pixels, result.width, result.height);
     const bytes = encode(img);

@@ -12,9 +12,9 @@
   "tasks": {
     "dev": "deno run --allow-net --allow-read main.ts",
     "start": "deno run --allow-net --allow-read main.ts",
-    "check": "deno check main.ts og_test.ts bbox_test.ts",
+    "check": "deno check main.ts og_test.ts bbox_test.ts region_test.ts",
     "fmt": "deno fmt",
     "lint": "deno lint",
-    "test": "deno test og_test.ts bbox_test.ts"
+    "test": "deno test og_test.ts bbox_test.ts region_test.ts"
   }
 }
