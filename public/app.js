@@ -1,6 +1,8 @@
 import {
   BOXES,
+  boxOverflow,
   drawBoxOverlay,
+  drawViewBoxOutline,
   formatRect,
   isClipped,
   overlayLayout,
@@ -24,6 +26,14 @@ const overlayEl = document.getElementById("bbox-overlay");
 const overlayCtx = overlayEl.getContext("2d");
 const bboxVisibleEl = document.getElementById("bbox-visible");
 const bboxMetaEl = document.getElementById("bbox-meta");
+const viewEl = document.getElementById("view");
+const regionFieldsEl = document.getElementById("region-fields");
+const regionXEl = document.getElementById("region-x");
+const regionYEl = document.getElementById("region-y");
+const regionWEl = document.getElementById("region-w");
+const regionHEl = document.getElementById("region-h");
+const previewNoteEl = document.getElementById("preview-note");
+const viewBoxLegendEl = document.getElementById("viewbox-legend");
 const bboxRows = new Map(
   [...document.querySelectorAll("tr[data-box]")].map((row) => [
     row.dataset.box,
@@ -74,6 +84,25 @@ function applyBboxVisibility() {
   overlayEl.style.display = bboxVisibleEl.checked ? "" : "none";
 }
 
+// Shows the custom-region inputs, the native-preview note, and the viewBox
+// legend only when the selected view needs them.
+function applyViewVisibility() {
+  const view = viewEl.value;
+  regionFieldsEl.hidden = view !== "custom";
+  previewNoteEl.hidden = view === "natural";
+  viewBoxLegendEl.hidden = view === "natural";
+}
+
+// Pre-fills the custom inputs from the last applied window.
+function syncRegionInputs() {
+  if (lastBboxData === null) return;
+  const { region } = lastBboxData;
+  regionXEl.value = String(num(region.x));
+  regionYEl.value = String(num(region.y));
+  regionWEl.value = String(num(region.width));
+  regionHEl.value = String(num(region.height));
+}
+
 async function postJson(path, payload) {
   const res = await fetch(path, {
     method: "POST",
@@ -88,24 +117,23 @@ async function postJson(path, payload) {
 const num = (n) => Number(n.toFixed(2));
 
 // Draws only the boxes whose row toggle is checked; all three values stay in
-// the table regardless.
+// the table regardless. The overlay bitmap keeps the raster's exact pixels and
+// grows by half a line width per side, plus any box overflow beyond the frame,
+// so boundary and off-frame outlines stay visible.
 function drawOverlay(data) {
-  const { width, height, naturalWidth, naturalHeight } = data;
-  const boxes = BOXES.filter((box) => bboxToggles.get(box.key).checked).map(
-    (box) => ({
-      ...box,
-      rect: toPixelRect(
-        data[box.key] ?? null,
-        naturalWidth,
-        naturalHeight,
-        width,
-        height,
-      ),
-    }),
+  const { width, height, region } = data;
+  const mapped = BOXES.map((box) => ({
+    box,
+    rect: toPixelRect(data[box.key] ?? null, region, width, height),
+  }));
+  const boxes = mapped
+    .filter(({ box }) => bboxToggles.get(box.key).checked)
+    .map(({ box, rect }) => ({ ...box, rect }));
+  const layout = overlayLayout(
+    width,
+    height,
+    boxOverflow(mapped.map(({ rect }) => rect), width, height),
   );
-  // The raster keeps its exact output pixels; only the overlay bitmap grows by
-  // half a line width on every side so boundary outlines are not clipped.
-  const layout = overlayLayout(width, height);
   overlayEl.width = layout.bitmapWidth;
   overlayEl.height = layout.bitmapHeight;
   overlayEl.style.left = `${layout.css.left}%`;
@@ -113,6 +141,17 @@ function drawOverlay(data) {
   overlayEl.style.width = `${layout.css.width}%`;
   overlayEl.style.height = `${layout.css.height}%`;
   drawBoxOverlay(overlayCtx, width, height, boxes, layout.padding);
+  if (viewEl.value !== "natural") {
+    const viewBoxRect = toPixelRect(
+      { x: 0, y: 0, width: data.naturalWidth, height: data.naturalHeight },
+      region,
+      width,
+      height,
+    );
+    if (viewBoxRect !== null) {
+      drawViewBoxOutline(overlayCtx, viewBoxRect, layout.padding);
+    }
+  }
 }
 
 // Fills the bbox table (all three boxes, every render: `null` is a value) and
@@ -120,26 +159,23 @@ function drawOverlay(data) {
 // separate so the raster canvas keeps the library's pixels untouched.
 function showBoundingBoxes(data) {
   lastBboxData = data;
-  const { width, height, naturalWidth, naturalHeight } = data;
+  const { width, height, naturalWidth, naturalHeight, region } = data;
+  const isNatural = region.x === 0 && region.y === 0 &&
+    region.width === naturalWidth && region.height === naturalHeight;
   bboxMetaEl.textContent =
-    `natural ${num(naturalWidth)}×${
-      num(naturalHeight)
+    `region ${num(region.x)}, ${num(region.y)}, ${num(region.width)}×${
+      num(region.height)
     } → output ${width}×${height} px` +
-    ` (scale ×${num(width / naturalWidth)}, ×${num(height / naturalHeight)})`;
+    ` (scale ×${num(width / region.width)}, ×${num(height / region.height)})` +
+    (isNatural ? "" : ` · natural ${num(naturalWidth)}×${num(naturalHeight)}`);
   for (const box of BOXES) {
     const rect = data[box.key] ?? null;
-    const pixels = toPixelRect(
-      rect,
-      naturalWidth,
-      naturalHeight,
-      width,
-      height,
-    );
+    const pixels = toPixelRect(rect, region, width, height);
     const row = bboxRows.get(box.key);
     row.querySelector(".bbox-natural").textContent = formatRect(rect);
     row.querySelector(".bbox-pixels").textContent = formatRect(pixels);
     row.querySelector(".bbox-note").textContent =
-      isClipped(pixels, width, height) ? "extends beyond canvas" : "";
+      isClipped(pixels, width, height) ? "extends beyond view" : "";
   }
   drawOverlay(data);
 }
@@ -160,10 +196,22 @@ async function render() {
   const dpr = dprEl.checked ? globalThis.devicePixelRatio || 1 : 1;
   const width = scaledSize(sizeValue(widthEl), dpr);
   const height = scaledSize(sizeValue(heightEl), dpr);
+  const view = viewEl.value;
+  const viewFields = view === "fit" ? { fit: "bounds" } : view === "custom"
+    ? {
+      region: {
+        x: Number(regionXEl.value),
+        y: Number(regionYEl.value),
+        width: Number(regionWEl.value),
+        height: Number(regionHEl.value),
+      },
+    }
+    : {};
+  const payload = { svg, width, height, ...viewFields };
   statusEl.textContent = "Rendering…";
   try {
     const [data, usvgData] = await Promise.all([
-      postJson("/api/rgba", { svg, width, height }),
+      postJson("/api/rgba", payload),
       postJson("/api/usvg", { svg }),
     ]);
     const pixels = decodeBase64(data.pixelsBase64);
@@ -196,6 +244,11 @@ for (const toggle of bboxToggles.values()) {
   });
 }
 dprEl.addEventListener("change", render);
+viewEl.addEventListener("change", () => {
+  if (viewEl.value === "custom") syncRegionInputs();
+  applyViewVisibility();
+  render();
+});
 sampleEl.addEventListener("change", async () => {
   await loadSample();
   await render();
@@ -203,5 +256,6 @@ sampleEl.addEventListener("change", async () => {
 renderBtn.addEventListener("click", render);
 applyPixelated();
 applyBboxVisibility();
+applyViewVisibility();
 await loadSource();
 await render();

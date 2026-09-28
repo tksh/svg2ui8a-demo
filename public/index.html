@@ -15,13 +15,29 @@
           <select id="sample">
             <option value="ghostscript_tiger.svg" selected>Ghostscript Tiger</option>
             <option value="straightlines.svg">Straightlines</option>
+            <option value="overflow.svg">Overflow (region demo)</option>
           </select>
         </label>
+        <label>View
+          <select id="view">
+            <option value="natural" selected>Natural canvas</option>
+            <option value="fit">Fit to bounds</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+        <span id="region-fields" hidden>
+          <label>x <input id="region-x" type="number" step="any" value="0" /></label>
+          <label>y <input id="region-y" type="number" step="any" value="0" /></label>
+          <label>w <input id="region-w" type="number" step="any" value="512" /></label>
+          <label>h <input id="region-h" type="number" step="any" value="512" /></label>
+        </span>
+        <span class="row-break"></span>
         <label>Width <input id="width" type="number" value="512" min="1" max="4096" /></label>
         <label>Height <input id="height" type="number" value="512" min="1" max="4096" /></label>
         <label><input id="dpr" type="checkbox" checked /> Auto size × devicePixelRatio</label>
         <label><input id="pixelated" type="checkbox" /> Pixelated (raw pixels)</label>
         <label><input id="bbox-visible" type="checkbox" checked /> Bounding boxes</label>
+        <span class="row-break"></span>
         <button id="render">Render</button>
       </section>
 
@@ -42,6 +58,10 @@
             </div>
           </figure>
         </div>
+        <p id="preview-note" class="hint" hidden>
+          Native <code>&lt;img&gt;</code> preview always clips to the document
+          viewBox; the canvas reflects the selected view.
+        </p>
       </section>
 
       <section>
@@ -80,12 +100,16 @@
             </tr>
           </tbody>
         </table>
+        <p id="viewbox-legend" class="hint" hidden>
+          <span class="swatch swatch-viewbox"></span><code>viewBox</code> — the
+          document window inside the current view.
+        </p>
         <p class="hint">
           Geometry, geometry plus stroke, and the layer (filter) box — all in
-          natural SVG canvas units. Output pixel coords are those values scaled
-          by <code>output / natural</code> per axis; raw values stay canvas-sized
-          even when width/height are overridden. Uncheck a row to hide its
-          outline; the values stay listed.
+          natural SVG canvas units. Output pixel coords map those values through
+          the rendered region (<code>output / region</code> per axis, offset by
+          the region origin). Uncheck a row to hide its outline; the values
+          stay listed.
         </p>
       </section>
 
