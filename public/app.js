@@ -18,6 +18,7 @@ const renderBtn = document.getElementById("render");
 const sourceEl = document.getElementById("source");
 const usvgMetaEl = document.getElementById("usvg-meta");
 const usvgEl = document.getElementById("usvg");
+const sourceMetaEl = document.getElementById("source-meta");
 const dprEl = document.getElementById("dpr");
 const pixelatedEl = document.getElementById("pixelated");
 const sampleEl = document.getElementById("sample");
@@ -235,6 +236,8 @@ async function render() {
     statusEl.textContent =
       `${data.width}×${data.height} · alpha: ${data.alphaMode}` +
       (dprEl.checked ? ` · dpr ${dpr}` : "");
+    // Input and usvg sizes, measured together per render (no per-keystroke work).
+    sourceMetaEl.textContent = `SVG string ${svg.length} chars`;
     usvgMetaEl.textContent =
       `Uint8Array ${usvgData.byteLength} bytes → usvg string ${usvgData.usvg.length} chars`;
     usvgEl.textContent = usvgData.usvg;
