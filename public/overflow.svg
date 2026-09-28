@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"
+  viewBox="0 0 100 100">
+  <title>Overflow sample</title>
+  <desc>Shapes placed outside the viewBox; use View: Fit to bounds to reveal them.</desc>
+
+  <rect x="10" y="10" width="30" height="30" fill="#cc4444" />
+  <rect x="-40" y="20" width="30" height="30" fill="#ff8800" />
+  <rect x="110" y="50" width="30" height="30" fill="#00aa88" />
+  <rect x="20" y="-30" width="30" height="30" fill="#8844ff" />
+
+  <g stroke="#333333" stroke-width="12">
+    <path d="M0,90 L100,90" />
+  </g>
+</svg>
