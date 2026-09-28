@@ -26,7 +26,8 @@ const overlayEl = document.getElementById("bbox-overlay");
 const overlayCtx = overlayEl.getContext("2d");
 const bboxVisibleEl = document.getElementById("bbox-visible");
 const bboxMetaEl = document.getElementById("bbox-meta");
-const viewEl = document.getElementById("view");
+const regionModeEl = document.getElementById("region-mode");
+const alphaModeEl = document.getElementById("alpha-mode");
 const regionFieldsEl = document.getElementById("region-fields");
 const regionXEl = document.getElementById("region-x");
 const regionYEl = document.getElementById("region-y");
@@ -85,12 +86,12 @@ function applyBboxVisibility() {
 }
 
 // Shows the custom-region inputs, the native-preview note, and the viewBox
-// legend only when the selected view needs them.
-function applyViewVisibility() {
-  const view = viewEl.value;
-  regionFieldsEl.hidden = view !== "custom";
-  previewNoteEl.hidden = view === "natural";
-  viewBoxLegendEl.hidden = view === "natural";
+// legend only when the selected region mode needs them.
+function applyRegionModeVisibility() {
+  const mode = regionModeEl.value;
+  regionFieldsEl.hidden = mode !== "custom";
+  previewNoteEl.hidden = mode === "natural";
+  viewBoxLegendEl.hidden = mode === "natural";
 }
 
 // Pre-fills the custom inputs from the last applied window.
@@ -141,7 +142,7 @@ function drawOverlay(data) {
   overlayEl.style.width = `${layout.css.width}%`;
   overlayEl.style.height = `${layout.css.height}%`;
   drawBoxOverlay(overlayCtx, width, height, boxes, layout.padding);
-  if (viewEl.value !== "natural") {
+  if (regionModeEl.value !== "natural") {
     const viewBoxRect = toPixelRect(
       { x: 0, y: 0, width: data.naturalWidth, height: data.naturalHeight },
       region,
@@ -196,8 +197,10 @@ async function render() {
   const dpr = dprEl.checked ? globalThis.devicePixelRatio || 1 : 1;
   const width = scaledSize(sizeValue(widthEl), dpr);
   const height = scaledSize(sizeValue(heightEl), dpr);
-  const view = viewEl.value;
-  const viewFields = view === "fit" ? { fit: "bounds" } : view === "custom"
+  const regionMode = regionModeEl.value;
+  const regionFields = regionMode === "fit"
+    ? { fit: "bounds" }
+    : regionMode === "custom"
     ? {
       region: {
         x: Number(regionXEl.value),
@@ -207,7 +210,13 @@ async function render() {
       },
     }
     : {};
-  const payload = { svg, width, height, ...viewFields };
+  const payload = {
+    svg,
+    width,
+    height,
+    alphaMode: alphaModeEl.value,
+    ...regionFields,
+  };
   statusEl.textContent = "Rendering…";
   try {
     const [data, usvgData] = await Promise.all([
@@ -244,9 +253,10 @@ for (const toggle of bboxToggles.values()) {
   });
 }
 dprEl.addEventListener("change", render);
-viewEl.addEventListener("change", () => {
-  if (viewEl.value === "custom") syncRegionInputs();
-  applyViewVisibility();
+alphaModeEl.addEventListener("change", render);
+regionModeEl.addEventListener("change", () => {
+  if (regionModeEl.value === "custom") syncRegionInputs();
+  applyRegionModeVisibility();
   render();
 });
 sampleEl.addEventListener("change", async () => {
@@ -256,6 +266,6 @@ sampleEl.addEventListener("change", async () => {
 renderBtn.addEventListener("click", render);
 applyPixelated();
 applyBboxVisibility();
-applyViewVisibility();
+applyRegionModeVisibility();
 await loadSource();
 await render();

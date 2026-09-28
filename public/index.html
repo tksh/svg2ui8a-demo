@@ -10,7 +10,7 @@
     <main>
       <h1><a href="https://jsr.io/@tksh/svg2ui8a">@tksh/svg2ui8a</a> demo</h1>
 
-      <section class="controls">
+      <section class="settings">
         <label>Sample
           <select id="sample">
             <option value="ghostscript_tiger.svg" selected>Ghostscript Tiger</option>
@@ -18,27 +18,53 @@
             <option value="overflow.svg">Overflow (region demo)</option>
           </select>
         </label>
-        <label>View
-          <select id="view">
-            <option value="natural" selected>Natural canvas</option>
-            <option value="fit">Fit to bounds</option>
-            <option value="custom">Custom</option>
-          </select>
-        </label>
-        <span id="region-fields" hidden>
-          <label>x <input id="region-x" type="number" step="any" value="0" /></label>
-          <label>y <input id="region-y" type="number" step="any" value="0" /></label>
-          <label>w <input id="region-w" type="number" step="any" value="512" /></label>
-          <label>h <input id="region-h" type="number" step="any" value="512" /></label>
-        </span>
-        <span class="row-break"></span>
-        <label>Width <input id="width" type="number" value="512" min="1" max="4096" /></label>
-        <label>Height <input id="height" type="number" value="512" min="1" max="4096" /></label>
-        <label><input id="dpr" type="checkbox" checked /> Auto size × devicePixelRatio</label>
-        <label><input id="pixelated" type="checkbox" /> Pixelated (raw pixels)</label>
-        <label><input id="bbox-visible" type="checkbox" checked /> Bounding boxes</label>
-        <span class="row-break"></span>
-        <button id="render">Render</button>
+
+        <div class="option-groups">
+          <fieldset class="option-group">
+            <legend><code>svg2ui8a</code> options (<code>Svg2RgbaOptions</code>)</legend>
+            <div class="controls">
+              <label><code>width</code> <input id="width" type="number" value="512" min="1" max="4096" /></label>
+              <label><code>height</code> <input id="height" type="number" value="512" min="1" max="4096" /></label>
+              <label><code>alphaMode</code>
+                <select id="alpha-mode">
+                  <option value="straight" selected>straight</option>
+                  <option value="premultiplied">premultiplied</option>
+                </select>
+              </label>
+              <label><code>region</code>
+                <select id="region-mode">
+                  <option value="natural" selected>natural canvas (default)</option>
+                  <option value="fit">fit to bounding boxes</option>
+                  <option value="custom">custom x/y/w/h</option>
+                </select>
+              </label>
+              <span id="region-fields" hidden>
+                <label><code>x</code> <input id="region-x" type="number" step="any" value="0" /></label>
+                <label><code>y</code> <input id="region-y" type="number" step="any" value="0" /></label>
+                <label><code>w</code> <input id="region-w" type="number" step="any" value="512" /></label>
+                <label><code>h</code> <input id="region-h" type="number" step="any" value="512" /></label>
+              </span>
+            </div>
+            <p class="hint">
+              Sent straight into <code>svg2rgba(svg, options)</code>.
+              <code>region</code> is a canvas window: <code>fit</code> uses the
+              padded union of the three <code>usvg</code> boxes.
+            </p>
+          </fieldset>
+
+          <fieldset class="option-group demo">
+            <legend>Demo utilities (not <code>Svg2RgbaOptions</code>)</legend>
+            <div class="controls">
+              <label><input id="dpr" type="checkbox" checked /> Auto size × devicePixelRatio</label>
+              <label><input id="pixelated" type="checkbox" /> Pixelated (raw pixels)</label>
+              <label><input id="bbox-visible" type="checkbox" checked /> Bounding boxes</label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="controls">
+          <button id="render">Render</button>
+        </div>
       </section>
 
       <section>

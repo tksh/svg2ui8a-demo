@@ -119,7 +119,7 @@ string.
 - `og:image` uses an absolute URL: `publicBaseUrl` picks `http` for
   localhost/127.0.0.1 and `https` otherwise (Deno Deploy compatible).
 
-### Bounding boxes and views (`/api/rgba` + `public/bbox.js`, `region.ts`)
+### Bounding boxes, region, settings panel (`/api/rgba`, `public/bbox.js`, `region.ts`)
 
 Every successful render returns the three `usvg` root boxes as
 `{ x, y, width, height } | null` objects: `absBoundingBox` (geometry),
@@ -132,12 +132,16 @@ response's `region` window.
   shows the `region` window.** `toPixelRect(rect, region, width, height)` scales
   by `output / region` per axis and offsets by `-region.{x,y}`; with both output
   sizes requested the scale is non-uniform.
-- **View modes.** The `View` select posts nothing (natural), `fit: "bounds"`, or
-  a custom `region`. `region.ts` computes fit windows server-side (see the API
-  section). Outside the natural view, `drawViewBoxOutline` draws a 1 px solid
-  magenta (`#ff00ff`) outline of the document viewBox, and `#viewbox-legend`
-  shows the matching swatch; magenta is unused by the boxes (geometry is
-  `#ff4500`, not pure red) and stays visible on gray artwork.
+- **Settings panel.** Two bordered fieldsets separate the `Svg2RgbaOptions`
+  controls (`width`, `height`, `alphaMode`, `region`, in monospace) from the
+  demo-only utilities (DPR, pixelated, bbox toggle). The `region` select posts
+  nothing for `natural canvas (default)`, `fit: "bounds"` for
+  `fit to bounding boxes`, or a custom rect for `custom x/y/w/h`; `region.ts`
+  computes fit windows server-side (see the API section). Outside the natural
+  mode, `drawViewBoxOutline` draws a 1 px solid magenta (`#ff00ff`) outline of
+  the document viewBox, and `#viewbox-legend` shows the matching swatch; magenta
+  is unused by the boxes (geometry is `#ff4500`, not pure red) and stays visible
+  on gray artwork.
 - In fit/custom views, `#preview-note` marks that the native `<img>` preview
   still clips to the document viewBox while the canvas reflects the view.
 - The overlay is a **separate, transparent, absolutely positioned canvas**

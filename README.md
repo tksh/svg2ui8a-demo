@@ -44,17 +44,23 @@ deno task dev
   `Red filled rect` / `size: width=2 height=2`), and `og:image` points at
   `/api/png` with the built SVG. Absent/invalid params fall back to a generic
   card, never an error.
-- `public/index.html` + `public/app.js` — sample dropdown (Ghostscript Tiger by
-  default, Straightlines, Overflow), a `View` select (`Natural canvas` /
-  `Fit to bounds` / `Custom` with x/y/w/h fields), and an editable SVG textarea;
+- `public/index.html` + `public/app.js` — the settings panel is split into two
+  visually boxed groups. The `svg2ui8a` group holds the `Svg2RgbaOptions`
+  controls (`width`, `height`, `alphaMode`, `region`); the demo group holds the
+  site-only utilities (`Auto size × devicePixelRatio`,
+  `Pixelated (raw
+  pixels)`, `Bounding boxes`). The `region` modes are
+  `natural canvas
+  (default)`, `fit to bounding boxes` (the padded box union,
+  computed server-side), and `custom x/y/w/h`. Sample dropdown (Ghostscript
+  Tiger by default, Straightlines, Overflow) plus an editable SVG textarea;
   Render posts its contents and shows the native SVG next to the library
-  rendering (`<canvas>`), plus the usvg intermediate. Two toggles:
-  `Auto size ×
-  devicePixelRatio` (on by default; requests the width/height
-  inputs scaled by `devicePixelRatio`, clamped to the 4096px server limit) and
-  `Pixelated` (off by default; nearest-neighbor display scaling for raw-pixel
-  inspection). In fit/custom views a note marks that the native `<img>` preview
-  still clips to the document viewBox.
+  rendering (`<canvas>`), plus the usvg intermediate.
+  `Auto size × devicePixelRatio` (on by default) requests the width/height
+  inputs scaled by `devicePixelRatio`, clamped to the 4096px server limit;
+  `Pixelated` (off by default) switches nearest-neighbor display scaling for
+  raw-pixel inspection. In fit/custom modes a note marks that the native `<img>`
+  preview still clips to the document viewBox.
 - Bounding boxes — a table always lists all three `RgbaResult` boxes (`null`
   included) in canvas coordinates and mapped output pixels (mapped through the
   response `region`); color- and dash-coded rects are drawn on a separate
