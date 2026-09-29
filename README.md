@@ -11,6 +11,31 @@ deno task dev
 # open http://localhost:8000
 ```
 
+## Live site and API samples
+
+The site is deployed at <https://svg2ui8a-demo.tksh.deno.net/>, and every sample
+below was verified against that deployment. All are plain `GET` URLs, and each
+link points at the absolute URL.
+
+| URL                                                                                                                     | Response                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`/`](https://svg2ui8a-demo.tksh.deno.net/)                                                                             | The demo page                                                                                                                                                |
+| [`/api/source`](https://svg2ui8a-demo.tksh.deno.net/api/source)                                                         | The bundled Ghostscript Tiger SVG (72,350 bytes)                                                                                                             |
+| [`/api/usvg`](https://svg2ui8a-demo.tksh.deno.net/api/usvg)                                                             | `{ byteLength, usvg }`: the normalized usvg XML (100,840 UTF-8 bytes for the tiger)                                                                          |
+| [`/api/rgba?width=64&height=64`](https://svg2ui8a-demo.tksh.deno.net/api/rgba?width=64&height=64)                       | A small render: `{ width, height, naturalWidth, naturalHeight, alphaMode, region, pixelsBase64, absBoundingBox, absStrokeBoundingBox, absLayerBoundingBox }` |
+| [`/api/rgba?fit=bounds&width=64&height=64`](https://svg2ui8a-demo.tksh.deno.net/api/rgba?fit=bounds&width=64&height=64) | The same, rendered through the region window that fits the bounding boxes                                                                                    |
+| [`/api/png?width=1200&height=630`](https://svg2ui8a-demo.tksh.deno.net/api/png?width=1200&height=630)                   | PNG bytes, ready to be used as an `og:image`                                                                                                                 |
+| [`/api/webp?width=300&height=300`](https://svg2ui8a-demo.tksh.deno.net/api/webp?width=300&height=300)                   | WebP bytes                                                                                                                                                   |
+| [`/og?shape=rect&fill=red&w=2&h=2`](https://svg2ui8a-demo.tksh.deno.net/og?shape=rect&fill=red&w=2&h=2)                 | Server-rendered OGP card HTML (also [`shape=circle&fill=blue&r=50`](https://svg2ui8a-demo.tksh.deno.net/og?shape=circle&fill=blue&r=50))                     |
+
+Rendering your own SVG works by passing it as a **base64url** string, so the URL
+needs no percent-encoding. This example renders a 10×10 red square at 1200×630
+([open it](https://svg2ui8a-demo.tksh.deno.net/api/png?svg=PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI-PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSJyZWQiLz48L3N2Zz4&width=1200&height=630)):
+
+```text
+https://svg2ui8a-demo.tksh.deno.net/api/png?svg=PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI-PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSJyZWQiLz48L3N2Zz4&width=1200&height=630
+```
+
 ## How it works
 
 - `main.ts` — `Deno.serve` static server with three APIs: `GET|POST /api/rgba`
