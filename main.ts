@@ -5,8 +5,8 @@
 // no PNG encoder, no client-side Wasm.
 import { PhotonImage } from "@denext/photon";
 import { decodeBase64Url, encodeBase64Url } from "@std/encoding/base64url";
-import { svg2rgba } from "@tksh/svg2ui8a/svg2rgba";
-import { svg2usvg } from "@tksh/svg2ui8a/svg2usvg";
+import { initSvg2rgba, svg2rgba } from "@tksh/svg2ui8a/svg2rgba";
+import { initSvg2usvg, svg2usvg } from "@tksh/svg2ui8a/svg2usvg";
 import {
   buildShapeSvg,
   escapeAttr,
@@ -21,6 +21,16 @@ import { fitRegion, parseFit, parseRegion, type RectF } from "./region.ts";
 const ROOT = new URL("./public/", import.meta.url);
 const SVG_PATH = new URL("./public/ghostscript_tiger.svg", import.meta.url);
 const SVG_TEXT = await Deno.readTextFile(SVG_PATH);
+
+// svg2ui8a 0.6.0 ships the Wasm binaries as separate .wasm files: initialize
+// both capabilities eagerly from pinned URLs, before Deno.serve() accepts any
+// request. A download failure fails startup instead of the first render.
+await initSvg2rgba({
+  wasmUrl: "https://jsr.io/@tksh/svg2ui8a/0.6.0/assets/svg2rgba_bg.wasm",
+});
+await initSvg2usvg({
+  wasmUrl: "https://jsr.io/@tksh/svg2ui8a/0.6.0/assets/svg2usvg_bg.wasm",
+});
 
 const CONTENT_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
