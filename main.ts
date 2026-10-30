@@ -22,15 +22,15 @@ const ROOT = new URL("./public/", import.meta.url);
 const SVG_PATH = new URL("./public/ghostscript_tiger.svg", import.meta.url);
 const SVG_TEXT = await Deno.readTextFile(SVG_PATH);
 
+const SVG2UI8A_VERSION = "0.6.0";
+const svg2ui8aWasmUrl = (asset: string) =>
+  `https://jsr.io/@tksh/svg2ui8a/${SVG2UI8A_VERSION}/assets/${asset}`;
+
 // svg2ui8a 0.6.0 ships the Wasm binaries as separate .wasm files: initialize
 // both capabilities eagerly from pinned URLs, before Deno.serve() accepts any
 // request. A download failure fails startup instead of the first render.
-await initSvg2rgba({
-  wasmUrl: "https://jsr.io/@tksh/svg2ui8a/0.6.0/assets/svg2rgba_bg.wasm",
-});
-await initSvg2usvg({
-  wasmUrl: "https://jsr.io/@tksh/svg2ui8a/0.6.0/assets/svg2usvg_bg.wasm",
-});
+await initSvg2rgba({ wasmUrl: svg2ui8aWasmUrl("svg2rgba_bg.wasm") });
+await initSvg2usvg({ wasmUrl: svg2ui8aWasmUrl("svg2usvg_bg.wasm") });
 
 const CONTENT_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
