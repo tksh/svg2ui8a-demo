@@ -201,6 +201,23 @@ Pinned via the `imports` map in `deno.json` (JSR specifiers, no npm):
 `@tksh/svg2ui8a` (with `/svg2rgba` and `/svg2usvg` subpaths), `@denext/photon`,
 `@std/encoding/base64url`, `@std/assert` (tests). The bbox fields require
 svg2ui8a >= 0.4.0, `region` requires >= 0.5.0 (`naturalWidth`/`naturalHeight`
-came in 0.3.6). Bumping a dependency requires editing both `deno.json` and
-`deno.lock`, and `main.ts` imports subpaths explicitly, so adding a new svg2ui8a
-subpath means adding an import-map entry too.
+came in 0.3.6). `svg2ui8a` is pinned to an **exact** version (no caret range) in
+all three entries.
+
+Bumping `svg2ui8a` must be applied consistently, all four steps together:
+
+1. Update the import-map entries in `deno.json` (exact versions).
+2. Regenerate `deno.lock` from `deno.json` (e.g. `deno task check`); never
+   hand-edit the lock.
+3. Update **both** pinned Wasm URLs in `main.ts`.
+4. Keep `README.md` and this file synchronized with the loading behavior.
+
+Use exact library versions for these entries unless the project deliberately
+adopts a new version-management policy. `main.ts` imports subpaths explicitly,
+so adding a new svg2ui8a subpath means adding an import-map entry too.
+
+Wasm loading (svg2ui8a >= 0.6.0): the binaries are separate `.wasm` files,
+fetched at startup from the pinned jsr.io URLs (`initSvg2rgba` / `initSvg2usvg`,
+both awaited before `Deno.serve()`). This needs outbound network access to
+`jsr.io` on every start — `deno task dev`/`start` already grant `--allow-net`. A
+missing or mismatched pinned file is a startup error, never a first-render 500.
