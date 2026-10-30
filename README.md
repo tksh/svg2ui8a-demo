@@ -39,9 +39,11 @@ https://svg2ui8a-demo.tksh.deno.net/api/png?svg=PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53
 ## How it works
 
 Since svg2ui8a 0.6.0 the Wasm binaries are separate `.wasm` files: `main.ts`
-eagerly initializes both capabilities at startup with pinned jsr.io URLs
-(`initSvg2rgba`/`initSvg2usvg`, both awaited before `Deno.serve()`), so a failed
-download fails startup rather than the first render.
+eagerly initializes both capabilities at startup with pinned jsr.io URLs built
+from `SVG2UI8A_VERSION` (`initSvg2rgba`/`initSvg2usvg`, both awaited before
+`Deno.serve()`), so a failed download fails startup rather than the first
+render. `deno task check` verifies that this version matches all three import
+entries and the lockfile; the bump procedure is documented in `AGENTS.md`.
 
 - `main.ts` — `Deno.serve` static server with three APIs: `GET|POST /api/rgba`
   uses `svg2rgba` (`jsr:@tksh/svg2ui8a/svg2rgba`), returns

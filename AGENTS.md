@@ -209,8 +209,16 @@ Bumping `svg2ui8a` must be applied consistently, all four steps together:
 1. Update the import-map entries in `deno.json` (exact versions).
 2. Regenerate `deno.lock` from `deno.json` (e.g. `deno task check`); never
    hand-edit the lock.
-3. Update **both** pinned Wasm URLs in `main.ts`.
-4. Keep `README.md` and this file synchronized with the loading behavior.
+3. Update `SVG2UI8A_VERSION` in `main.ts`; the shared URL builder then applies
+   the same version to both pinned Wasm URLs. Do not bypass the shared builder
+   with separate literals.
+4. Run `deno task check`, which executes `scripts/check_svg2ui8a_version.ts`,
+   and keep `README.md` and this file synchronized with the loading behavior.
+
+The consistency check fails when the three import-map entries, the lockfile
+resolution, and `main.ts`'s SVG2UI8A_VERSION disagree. It also checks that both
+Wasm asset names are still used. Do not use this check as permission to bypass
+its failure by changing the lockfile manually.
 
 Use exact library versions for these entries unless the project deliberately
 adopts a new version-management policy. `main.ts` imports subpaths explicitly,
