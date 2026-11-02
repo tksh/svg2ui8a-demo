@@ -209,23 +209,23 @@ Bumping `svg2ui8a` must be applied consistently, all four steps together:
 1. Update the import-map entries in `deno.json` (exact versions).
 2. Regenerate `deno.lock` from `deno.json` (e.g. `deno task check`); never
    hand-edit the lock.
-3. Update `SVG2UI8A_VERSION` in `main.ts`; the shared URL builder then applies
-   the same version to both pinned Wasm URLs. Do not bypass the shared builder
-   with separate literals.
+3. Run `deno task vendor:svg2ui8a` to refresh the two vendored binaries and
+   `assets/svg2ui8a/provenance.json` from the same published version.
 4. Run `deno task check`, which executes `scripts/check_svg2ui8a_version.ts`,
    and keep `README.md` and this file synchronized with the loading behavior.
 
 The consistency check fails when the three import-map entries, the lockfile
-resolution, and `main.ts`'s SVG2UI8A_VERSION disagree. It also checks that both
-Wasm asset names are still used. Do not use this check as permission to bypass
-its failure by changing the lockfile manually.
+resolution, the vendored provenance version, or the vendored file hashes and
+sizes disagree. Do not use this check as permission to bypass its failure by
+changing the lockfile manually.
 
 Use exact library versions for these entries unless the project deliberately
 adopts a new version-management policy. `main.ts` imports subpaths explicitly,
 so adding a new svg2ui8a subpath means adding an import-map entry too.
 
-Wasm loading (svg2ui8a >= 0.6.0): the binaries are separate `.wasm` files,
-fetched at startup from the pinned jsr.io URLs (`initSvg2rgba` / `initSvg2usvg`,
-both awaited before `Deno.serve()`). This needs outbound network access to
-`jsr.io` on every start — `deno task dev`/`start` already grant `--allow-net`. A
-missing or mismatched pinned file is a startup error, never a first-render 500.
+Wasm loading (svg2ui8a >= 0.6.1): the binaries are separate `.wasm` files
+vendored under `assets/svg2ui8a/`. `main.ts` reads both with `Deno.readFile()`
+and initializes `initSvg2rgba` / `initSvg2usvg` from `wasmBytes`, both awaited
+before `Deno.serve()`. No jsr.io Wasm request is made at runtime, and no
+outbound network access is needed for rendering. A missing or mismatched local
+file is a startup error, never a first-render 500.
