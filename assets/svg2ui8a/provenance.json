@@ -1,0 +1,16 @@
+{
+  "package": "@tksh/svg2ui8a",
+  "version": "0.6.1",
+  "files": {
+    "svg2rgba_bg.wasm": {
+      "sourceUrl": "https://jsr.io/@tksh/svg2ui8a/0.6.1/assets/svg2rgba_bg.wasm",
+      "size": 998801,
+      "sha256": "efe5a798399e181b1acecd7b7f4b9e736f2a13451222e4f9cb513415717a4bb6"
+    },
+    "svg2usvg_bg.wasm": {
+      "sourceUrl": "https://jsr.io/@tksh/svg2ui8a/0.6.1/assets/svg2usvg_bg.wasm",
+      "size": 657772,
+      "sha256": "d9c17f6a1c28a773dede5800f802dc9603244bb737c96db6b0905715d00fb33e"
+    }
+  }
+}
